@@ -9,7 +9,17 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "Fale.h"
+//struct _punkt { float m, v, x; };
 
+_punkt** plat[2];
+
+_punkt** aa;
+
+float DiffuseLight1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+float LightPosition1[] = { 0.0f, 20.0f, 180.0f, 1.0f };
+float SpotDirection1[] = { 0.0f, 0.0f, 1.0f };
+float skala = 0.02f;
 
 std::string loadShaderSource(const char* filePath) {
 	std::ifstream file(filePath);
@@ -79,7 +89,8 @@ void display() {
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
+	
+	
 	glBegin(GL_TRIANGLES);
 	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
 	glVertexAttrib3f(0, -1.0f, -1.0f, 0.0f);
@@ -126,7 +137,94 @@ void reshape(int w, int h) {
 // Funkcja inicjalizuj�ca
 void init() {
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+
+	glShadeModel(GL_SMOOTH);//d
+
+	//	glShadeModel(GL_FLAT);//w
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	glClearDepth(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, DiffuseLight1);
+	glLightfv(GL_LIGHT0, GL_POSITION, LightPosition1);
+
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0f);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 120.0f);
+
+	glEnable(GL_LIGHT0);
+}
+
+void GLRenderer(int osx, int osy, int osz)
+{
+	/*
+	//TO teraz wykomentowalem bo nie mam bladego pojecia po co mi to:
+	//	int i, j;
+	//	_punkt (*aa)[N_Y] = plat[kol];
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//   glLoadIdentity(); //tego nie bylo
+
+
+	glPushMatrix();
+
+	//	glRotatef (45,0,0,-1); //tymczasowo wyciete
+	//	glRotatef (70,1,0,0);  //tymczasowo wyciete
+
+	glRotatef(osx, 0, 0, -1); //tymczasowo wyciete
+	glRotatef(osy, 1, 0, 0);  //tymczasowo wyciete
+	glRotatef(osz, 0, 1, 0);  //tymczasowo wyciete
+
+	glTranslatef(-1.0f, -1.0f, 0.0f);
+	glScalef(skala, skala, 0.3f);
+
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+
+	//tymczasowo wyciete
+
+   //if (!text)
+
+	DrawInTrigers();
+
+	glPopMatrix();
+	SwapBuffers(hDC);
+	//	Sleep (1);
+	*/
+}
+
+inline void DrawInTrigers(void)
+{
+	int i, j;
+
+	for (i = 1; i < N_X; i++)
+		for (j = 1; j < N_Y; j++)
+		{
+			//glNormal3f(VN.nx, VN.ny, VN.nz);
+			glBegin(GL_TRIANGLES);
+			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
+			glVertex3f(0 + i, 0 + j, aa[i][j].x);
+			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glEnd();
+		}
+
+	// --------------
+
+	for (i = 1; i < N_X; i++)
+		for (j = 1; j < N_Y; j++)
+		{
+			//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
+			glBegin(GL_TRIANGLES);
+			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
+			glVertex3f(1 + i, 1 + j, aa[i + 1][j + 1].x);
+			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glEnd();
+		}
+
 }
 
 int main(int argc, char** argv) {
