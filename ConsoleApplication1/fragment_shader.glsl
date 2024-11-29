@@ -23,4 +23,9 @@ void main() {
     vec3 specular = specularStrength * spec * lightColor;
 vec3 result = (ambient + diffuse + specular) * objectColor;
     color = vec4(result, 1.0);
+    
+    
+    //vec3 normalizedNormal = normalize(fragNormal);
+    //color = vec4(normalizedNormal * 0.5 + 0.5, 1.0); // Normalizowanie i skalowanie do zakresu [0, 1]
+    //color = objectColor;
 }
