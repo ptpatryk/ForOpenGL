@@ -93,7 +93,36 @@ void display() {
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 	
-	
+	int i, j;
+
+	model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // Obrót
+	model = glm::translate(model, glm::vec3(-1.0f, -1.0f, 0.0f)); // Przesuni�cie
+	model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.05f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+	for (i = 1; i < N_X; i++)
+		for (j = 1; j < N_Y; j++)
+		{
+			//glNormal3f(VN.nx, VN.ny, VN.nz);
+			glBegin(GL_TRIANGLES);
+			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
+			glVertex3f(0 + i, 0 + j, aa[i][j].x);
+			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glEnd();
+		}
+
+	for (i = 1; i < N_X; i++)
+		for (j = 1; j < N_Y; j++)
+		{
+			//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
+			glBegin(GL_TRIANGLES);
+			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
+			glVertex3f(1 + i, 1 + j, aa[i + 1][j + 1].x);
+			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glEnd();
+		}
+
+
 	glBegin(GL_TRIANGLES);
 	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
 	glVertexAttrib3f(0, -1.0f, -1.0f, 0.0f);
@@ -111,7 +140,7 @@ void display() {
 	glVertexAttrib3f(0, 1.0f, 1.0f, -2.0f);
 	glVertexAttrib3f(0, 2.0f, -1.0f, 0.0f);
 	glEnd();
-
+	
 	/*
 	// Rysowanie pierwszego tr�jk�ta
 	glBindVertexArray(VAO);
