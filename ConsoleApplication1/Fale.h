@@ -29,8 +29,6 @@ private:
 	_punkt** plat[2];
 	_punkt* struna[2];
 	//(_punkt(*)[100])
-	_punkt** PogiezPlat();
-	_punkt* PobiezStrune();
 	//okresla sposob pobudzenia, 1 - fala kulista, 2 - fala plaska
 	SposobPlata sp;
 	float czas; //okresla czas pobudzenia
@@ -39,6 +37,9 @@ private:
 public:
 	Fale();
 	~Fale();
+	_punkt** PogiezPlat();
+	_punkt* PobiezStrune();
+
 	void akcja(void);       //oblicza parametry plata biezacego po czasie 'dt'
 	void akcjaStruna(void);
 	void Inicjuj(int);      //ustawia parametry poczatkowe platow (0-dla f. kulistej, 1-dla zalamania)

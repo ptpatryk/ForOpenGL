@@ -19,6 +19,9 @@ _punkt** aa;
 float DiffuseLight1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float LightPosition1[] = { 0.0f, 20.0f, 180.0f, 1.0f };
 float SpotDirection1[] = { 0.0f, 0.0f, 1.0f };
+float mat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+float mat2[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+
 float skala = 0.02f;
 
 std::string loadShaderSource(const char* filePath) {
@@ -60,7 +63,7 @@ GLuint createShaderProgram(const char* vertexPath, const char* fragmentPath) {
 	glDeleteShader(fragmentShader);
 	return shaderProgram;
 }
-// Funkcja do rysowania tr�jk�ta
+// Funkcja do rysowania trójkąta
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -126,6 +129,7 @@ void display() {
 	glutSwapBuffers();
 
 }
+
 // Funkcja do ustawienia perspektywy
 void reshape(int w, int h) {
 	glViewport(0, 0, w, h);
@@ -158,46 +162,8 @@ void init() {
 	glEnable(GL_LIGHT0);
 }
 
-void GLRenderer(int osx, int osy, int osz)
-{
-	/*
-	//TO teraz wykomentowalem bo nie mam bladego pojecia po co mi to:
-	//	int i, j;
-	//	_punkt (*aa)[N_Y] = plat[kol];
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//   glLoadIdentity(); //tego nie bylo
-
-
-	glPushMatrix();
-
-	//	glRotatef (45,0,0,-1); //tymczasowo wyciete
-	//	glRotatef (70,1,0,0);  //tymczasowo wyciete
-
-	glRotatef(osx, 0, 0, -1); //tymczasowo wyciete
-	glRotatef(osy, 1, 0, 0);  //tymczasowo wyciete
-	glRotatef(osz, 0, 1, 0);  //tymczasowo wyciete
-
-	glTranslatef(-1.0f, -1.0f, 0.0f);
-	glScalef(skala, skala, 0.3f);
-
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
-
-	//tymczasowo wyciete
-
-   //if (!text)
-
-	DrawInTrigers();
-
-	glPopMatrix();
-	SwapBuffers(hDC);
-	//	Sleep (1);
-	*/
-}
-
-inline void DrawInTrigers(void)
+void DrawInTrigersX()
 {
 	int i, j;
 
@@ -227,6 +193,56 @@ inline void DrawInTrigers(void)
 
 }
 
+void GLRenderer(int osx, int osy, int osz)
+{
+	
+	//TO teraz wykomentowalem bo nie mam bladego pojecia po co mi to:
+	//	int i, j;
+	//	_punkt (*aa)[N_Y] = plat[kol];
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//   glLoadIdentity(); //tego nie bylo
+
+
+	glPushMatrix();
+
+	//	glRotatef (45,0,0,-1); //tymczasowo wyciete
+	//	glRotatef (70,1,0,0);  //tymczasowo wyciete
+
+	glRotatef(osx, 0, 0, -1); //tymczasowo wyciete
+	glRotatef(osy, 1, 0, 0);  //tymczasowo wyciete
+	glRotatef(osz, 0, 1, 0);  //tymczasowo wyciete
+
+	glTranslatef(-1.0f, -1.0f, 0.0f);
+	glScalef(skala, skala, 0.3f);
+
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+
+	//tymczasowo wyciete
+
+   //if (!text)
+
+	DrawInTrigersX();
+
+	glPopMatrix();
+	//SwapBuffers(hDC);
+	glutSwapBuffers();
+	//	Sleep (1);
+	
+}
+
+
+void SetPlat(_punkt** dane, int osx, int osy, int osz)
+{
+	glEnable(GL_LIGHTING);
+
+	//	glDisable(GL_LIGHTING);
+	aa = dane;
+	GLRenderer(osx, osy, osz);
+}
+
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -236,9 +252,19 @@ int main(int argc, char** argv) {
 	glewInit();
 	init();
 
+	Fale* myfale;
+
+	myfale = new Fale();
+	myfale->Inicjuj(1);
+	myfale->InicjujStrune(dwa_osrodki, 1);
+
+	SetPlat(myfale->PogiezPlat(), 50, 30, 40);
+
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutMainLoop();
+
+
 	return 0;
 }
 
