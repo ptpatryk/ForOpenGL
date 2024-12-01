@@ -111,22 +111,22 @@ void display() {
 		{
 			//glNormal3f(VN.nx, VN.ny, VN.nz);
 			glBegin(GL_TRIANGLES);
-			glVertex3f(0 + i, 1 + j, 10 * aa[i][j + 1].x);
-			glVertex3f(0 + i, 0 + j, 10 * aa[i][j].x);
-			glVertex3f(1 + i, 0 + j, 10 * aa[i + 1][j].x);
+			glVertexAttrib3f(0,0 + i, 1 + j, 10 * aa[i][j + 1].x);
+			glVertexAttrib3f(0,0 + i, 0 + j, 10 * aa[i][j].x);
+			glVertexAttrib3f(0,1 + i, 0 + j, 10 * aa[i + 1][j].x);
 			glEnd();
 		}
 
-	for (i = 1; i < N_X; i++)
-		for (j = 1; j < N_Y; j++)
-		{
-			//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
-			glBegin(GL_TRIANGLES);
-			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
-			glVertex3f(1 + i, 1 + j, aa[i + 1][j + 1].x);
-			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
-			glEnd();
-		}
+	//for (i = 1; i < N_X; i++)
+	//	for (j = 1; j < N_Y; j++)
+	//	{
+	//		//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
+	//		glBegin(GL_TRIANGLES);
+	//		glVertexAttrib3f(0,0 + i, 1 + j, aa[i][j + 1].x);
+	//		glVertexAttrib3f(0,1 + i, 1 + j, aa[i + 1][j + 1].x);
+	//		glVertexAttrib3f(0,1 + i, 0 + j, aa[i + 1][j].x);
+	//		glEnd();
+	//	}
 
 	glutSwapBuffers();
 
