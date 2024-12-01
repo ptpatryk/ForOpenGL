@@ -24,6 +24,11 @@ float SpotDirection1[] = { 0.0f, 0.0f, 1.0f };
 float mat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float mat2[] = { 0.0f, 1.0f, 0.0f, 1.0f };
 
+typedef struct _Vertex3f {
+	float x, y, z;
+	float nx, ny, nz;
+} Vertex3f;
+
 float skala = 0.02f;
 
 std::string loadShaderSource(const char* filePath) {
@@ -45,6 +50,41 @@ GLuint compileShader(GLenum type, const char* source) {
 	}
 	return shader;
 }
+
+void GLCalculateNormals(float Ax, float Ay, float Az,
+	float Bx, float By, float Bz,
+	float Cx, float Cy, float Cz,
+	Vertex3f& VN
+)
+{
+
+	Vertex3f vA, vB, vN;
+	float vecLen;
+
+	vA.x = Ax - Cx;
+	vA.y = Ay - Cy;
+	vA.z = Az - Cz;
+
+	vB.x = Bx - Cx;
+	vB.y = By - Cy;
+	vB.z = Bz - Cz;
+
+	// 			vN = vA x vB
+
+	vN.x = (vA.y * vB.z) - (vA.z * vB.y);
+	vN.y = (vA.z * vB.x) - (vA.x * vB.z);
+	vN.z = (vA.x * vB.y) - (vA.y * vB.x);
+
+	//        	normalizacja
+
+	vecLen = sqrt((vN.x * vN.x) + (vN.y * vN.y) + (vN.z * vN.z));
+
+	VN.nx = vN.x / vecLen;
+	VN.ny = vN.y / vecLen;
+	VN.nz = vN.z / vecLen;
+
+}
+
 GLuint createShaderProgram(const char* vertexPath, const char* fragmentPath) {
 	std::string vertexCode = loadShaderSource(vertexPath);
 	std::string fragmentCode = loadShaderSource(fragmentPath);
@@ -106,27 +146,44 @@ void display() {
 	model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.05f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
+	Vertex3f VN;
+
 	for (i = 1; i < N_X; i++)
 		for (j = 1; j < N_Y; j++)
 		{
-			//glNormal3f(VN.nx, VN.ny, VN.nz);
+			
+			GLCalculateNormals(i, j, 10*aa[i][j].x,
+				i + 1, j, 10*aa[i + 1][j].x,
+				i, j + 1, 10*aa[i][j + 1].x,
+				VN
+			);
+
+			glNormal3f(VN.nx, VN.ny, VN.nz);
+			//glNormal3f(1, 1, 1);
 			glBegin(GL_TRIANGLES);
-			glVertexAttrib3f(0,0 + i, 1 + j, 10 * aa[i][j + 1].x);
-			glVertexAttrib3f(0,0 + i, 0 + j, 10 * aa[i][j].x);
-			glVertexAttrib3f(0,1 + i, 0 + j, 10 * aa[i + 1][j].x);
+			glVertex3f(0 + i, 1 + j, 10 * aa[i][j + 1].x);
+			glVertex3f(0 + i, 0 + j, 10 * aa[i][j].x);
+			glVertex3f(1 + i, 0 + j, 10 * aa[i + 1][j].x);
 			glEnd();
 		}
 
-	//for (i = 1; i < N_X; i++)
-	//	for (j = 1; j < N_Y; j++)
-	//	{
-	//		//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
-	//		glBegin(GL_TRIANGLES);
-	//		glVertexAttrib3f(0,0 + i, 1 + j, aa[i][j + 1].x);
-	//		glVertexAttrib3f(0,1 + i, 1 + j, aa[i + 1][j + 1].x);
-	//		glVertexAttrib3f(0,1 + i, 0 + j, aa[i + 1][j].x);
-	//		glEnd();
-	//	}
+	for (i = 1; i < N_X; i++)
+		for (j = 1; j < N_Y; j++)
+		{
+			GLCalculateNormals(i, j, 10*aa[i][j].x,
+				i + 1, j, 10*aa[i + 1][j].x,
+				i, j + 1, 10*aa[i][j + 1].x,
+				VN
+			);
+
+			glNormal3f(-VN.nx, -VN.ny, -VN.nz);
+			//glNormal3f(-1, -1, -1);
+			glBegin(GL_TRIANGLES);
+			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
+			glVertex3f(1 + i, 1 + j, aa[i + 1][j + 1].x);
+			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glEnd();
+		}
 
 	glutSwapBuffers();
 
@@ -154,7 +211,7 @@ void init() {
 
 	//	glShadeModel(GL_FLAT);//w
 
-	/*glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -166,7 +223,7 @@ void init() {
 	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0f);
 	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 120.0f);
 
-	glEnable(GL_LIGHT0);*/
+	glEnable(GL_LIGHT0);
 }
 
 
