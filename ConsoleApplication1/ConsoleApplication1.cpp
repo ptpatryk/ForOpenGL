@@ -116,14 +116,25 @@ void display() {
 	
 	glUseProgram(shaderProgram);
 	// Ustawienia o�wietlenia
-	GLint lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
-	GLint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+	//GLint lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
+	//GLint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+	//GLint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
+	//GLint objectColorLoc = glGetUniformLocation(shaderProgram, "objectColor");
+	//glUniform3f(lightPosLoc, 1.0f, 1.0f, 1.0f);
+	//glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f);
+	//glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+	//glUniform3f(objectColorLoc, 5.0f, 1.0f, 0.31f); // Kolor tr�jk�ta
+	// Uzyskaj lokalizację uniformów w shaderze
+	GLint lightDirLoc = glGetUniformLocation(shaderProgram, "lightDir");
 	GLint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
 	GLint objectColorLoc = glGetUniformLocation(shaderProgram, "objectColor");
-	glUniform3f(lightPosLoc, 1.0f, 1.0f, 1.0f);
-	glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f);
-	glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
-	glUniform3f(objectColorLoc, 5.0f, 1.0f, 0.31f); // Kolor tr�jk�ta
+
+	// Ustaw wartości dla uniformów
+	glUniform3f(lightDirLoc, -1.0f, 5.0f, 0.0f); // Przykładowy kierunek światła
+	glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Przykładowy kolor światła (biały)
+	glUniform3f(objectColorLoc, 0.6f, 0.7f, 0.8f); // Przykładowy kolor obiektu
+
+
 
 	// Definicja macierzy
 	glm::mat4 model = glm::mat4(1.0f);
@@ -151,15 +162,17 @@ void display() {
 	for (i = 1; i < N_X; i++)
 		for (j = 1; j < N_Y; j++)
 		{
-			
-			//GLCalculateNormals(i, j, 10*aa[i][j].x,
-			//	i + 1, j, 10*aa[i + 1][j].x,
-			//	i, j + 1, 10*aa[i][j + 1].x,
-			//	VN
-			//);
+			//glm::vec3 v0 = glm::vec3(0 + i, 1 + j, 10 * aa[i][j + 1].x); 
+			//glm::vec3 v1 = glm::vec3(0 + i, 0 + j, 10 * aa[i][j].x); 
+			//glm::vec3 v2 = glm::vec3(1 + i, 0 + j, 10 * aa[i + 1][j].x); 
+			//// Oblicz wektory krawędzi 
+			//glm::vec3 edge1 = v1 - v0; 
+			//glm::vec3 edge2 = v2 - v0; 
+			//// Oblicz normalną 
+			//glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2)); 
+			//// Ustaw normalną 
+			//glNormal3f(normal.x, normal.y, normal.z);
 
-			//glNormal3f(VN.nx, VN.ny, VN.nz);
-			//glNormal3f(1, 1, 1);
 			glBegin(GL_TRIANGLES);
 			glVertex3f(0 + i, 1 + j, 10 * aa[i][j + 1].x);
 			glVertex3f(0 + i, 0 + j, 10 * aa[i][j].x);
