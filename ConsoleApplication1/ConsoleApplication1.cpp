@@ -10,6 +10,8 @@
 #include <sstream>
 #include <string>
 #include "Fale.h"
+#include <thread>
+#include <chrono>
 //struct _punkt { float m, v, x; };
 
 _punkt** plat[2];
@@ -63,11 +65,15 @@ GLuint createShaderProgram(const char* vertexPath, const char* fragmentPath) {
 	glDeleteShader(fragmentShader);
 	return shaderProgram;
 }
+
+GLuint shaderProgram;
+
 // Funkcja do rysowania trójkąta
 void display() {
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	GLuint shaderProgram = createShaderProgram("vertex_shader.glsl", "fragment_shader.glsl");
+	
 	glUseProgram(shaderProgram);
 	// Ustawienia o�wietlenia
 	GLint lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
@@ -105,9 +111,9 @@ void display() {
 		{
 			//glNormal3f(VN.nx, VN.ny, VN.nz);
 			glBegin(GL_TRIANGLES);
-			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
-			glVertex3f(0 + i, 0 + j, aa[i][j].x);
-			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
+			glVertex3f(0 + i, 1 + j, 10 * aa[i][j + 1].x);
+			glVertex3f(0 + i, 0 + j, 10 * aa[i][j].x);
+			glVertex3f(1 + i, 0 + j, 10 * aa[i + 1][j].x);
 			glEnd();
 		}
 
@@ -121,39 +127,6 @@ void display() {
 			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
 			glEnd();
 		}
-
-
-	glBegin(GL_TRIANGLES);
-	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
-	glVertexAttrib3f(0, -1.0f, -1.0f, 0.0f);
-	glVertexAttrib3f(0, 1.0f, -1.0f, 0.0f);
-	glEnd();
-
-	//// Przekszta�cenie macierzy modelu dla drugiego tr�jk�ta
-	//model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f)); // Przesuni�cie
-	//model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // Obr�t
-	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-
-	glBegin(GL_TRIANGLES);
-	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
-	glVertexAttrib3f(0, 1.0f, 1.0f, -2.0f);
-	glVertexAttrib3f(0, 2.0f, -1.0f, 0.0f);
-	glEnd();
-	
-	/*
-	// Rysowanie pierwszego tr�jk�ta
-	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	// Przekszta�cenie macierzy modelu dla drugiego tr�jk�ta
-	model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f)); // Przesuni�cie
-	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // Obr�t
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-	// Rysowanie drugiego tr�jk�ta
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	*/
 
 	glutSwapBuffers();
 
@@ -168,7 +141,12 @@ void reshape(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 // Funkcja inicjalizuj�ca
+
+
+
 void init() {
+	shaderProgram = createShaderProgram("vertex_shader.glsl", "fragment_shader.glsl");
+	
 	glEnable(GL_DEPTH_TEST);
 	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
@@ -176,7 +154,7 @@ void init() {
 
 	//	glShadeModel(GL_FLAT);//w
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	/*glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -188,39 +166,10 @@ void init() {
 	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0f);
 	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 120.0f);
 
-	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT0);*/
 }
 
 
-void DrawInTrigersX()
-{
-	int i, j;
-
-	for (i = 1; i < N_X; i++)
-		for (j = 1; j < N_Y; j++)
-		{
-			//glNormal3f(VN.nx, VN.ny, VN.nz);
-			glBegin(GL_TRIANGLES);
-			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
-			glVertex3f(0 + i, 0 + j, aa[i][j].x);
-			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
-			glEnd();
-		}
-
-	// --------------
-
-	for (i = 1; i < N_X; i++)
-		for (j = 1; j < N_Y; j++)
-		{
-			//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
-			glBegin(GL_TRIANGLES);
-			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
-			glVertex3f(1 + i, 1 + j, aa[i + 1][j + 1].x);
-			glVertex3f(1 + i, 0 + j, aa[i + 1][j].x);
-			glEnd();
-		}
-
-}
 
 void GLRenderer(int osx, int osy, int osz)
 {
@@ -253,7 +202,7 @@ void GLRenderer(int osx, int osy, int osz)
 
    //if (!text)
 
-	DrawInTrigersX();
+	//DrawInTrigersX();
 
 	glPopMatrix();
 	//SwapBuffers(hDC);
@@ -265,12 +214,26 @@ void GLRenderer(int osx, int osy, int osz)
 
 void SetPlat(_punkt** dane, int osx, int osy, int osz)
 {
-	glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHTING);
 
 	//	glDisable(GL_LIGHTING);
 	aa = dane;
-	GLRenderer(osx, osy, osz);
+
+	glutPostRedisplay();
+
+	//GLRenderer(osx, osy, osz);
 }
+
+Fale* myfale;
+
+void threadFunction() {
+	while (true) {
+		SetPlat(myfale->PogiezPlat(), 50, 30, 40);
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+
+}
+
 
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
@@ -281,18 +244,21 @@ int main(int argc, char** argv) {
 	glewInit();
 	init();
 
-	Fale* myfale;
+	
 
 	myfale = new Fale();
 	myfale->Inicjuj(1);
 	myfale->InicjujStrune(dwa_osrodki, 1);
 
-	SetPlat(myfale->PogiezPlat(), 50, 30, 40);
+	aa=myfale->PogiezPlat();
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
-	glutMainLoop();
 
+std::thread myThread(threadFunction);
+
+	glutMainLoop();
+	myThread.join();
 
 	return 0;
 }

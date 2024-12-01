@@ -1,0 +1,48 @@
+﻿
+	glBegin(GL_TRIANGLES);
+	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
+	glVertexAttrib3f(0, -1.0f, -1.0f, 0.0f);
+	glVertexAttrib3f(0, 1.0f, -1.0f, 0.0f);
+	glEnd();
+
+	//// Przekszta�cenie macierzy modelu dla drugiego tr�jk�ta
+	//model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f)); // Przesuni�cie
+	//model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // Obr�t
+	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+
+	glBegin(GL_TRIANGLES);
+	glVertexAttrib3f(0, 0.0f, 1.0f, 0.0f);
+	glVertexAttrib3f(0, 1.0f, 1.0f, -2.0f);
+	glVertexAttrib3f(0, 2.0f, -1.0f, 0.0f);
+	glEnd();
+	
+	/*
+	// Rysowanie pierwszego tr�jk�ta
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	// Przekszta�cenie macierzy modelu dla drugiego tr�jk�ta
+	model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f)); // Przesuni�cie
+	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // Obr�t
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+	// Rysowanie drugiego tr�jk�ta
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	*/
+
+
+		myfale = new Fale();
+	myfale->Inicjuj(1);
+	myfale->InicjujStrune(dwa_osrodki, 1);
+
+	myfale->PogiezPlat();
+
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+
+
+	//while (true) {
+	//	SetPlat(myfale->PogiezPlat(), 50, 30, 40);
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//}
