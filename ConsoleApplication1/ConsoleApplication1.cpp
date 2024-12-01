@@ -152,13 +152,13 @@ void display() {
 		for (j = 1; j < N_Y; j++)
 		{
 			
-			GLCalculateNormals(i, j, 10*aa[i][j].x,
-				i + 1, j, 10*aa[i + 1][j].x,
-				i, j + 1, 10*aa[i][j + 1].x,
-				VN
-			);
+			//GLCalculateNormals(i, j, 10*aa[i][j].x,
+			//	i + 1, j, 10*aa[i + 1][j].x,
+			//	i, j + 1, 10*aa[i][j + 1].x,
+			//	VN
+			//);
 
-			glNormal3f(VN.nx, VN.ny, VN.nz);
+			//glNormal3f(VN.nx, VN.ny, VN.nz);
 			//glNormal3f(1, 1, 1);
 			glBegin(GL_TRIANGLES);
 			glVertex3f(0 + i, 1 + j, 10 * aa[i][j + 1].x);
@@ -170,13 +170,13 @@ void display() {
 	for (i = 1; i < N_X; i++)
 		for (j = 1; j < N_Y; j++)
 		{
-			GLCalculateNormals(i, j, 10*aa[i][j].x,
-				i + 1, j, 10*aa[i + 1][j].x,
-				i, j + 1, 10*aa[i][j + 1].x,
-				VN
-			);
+			//GLCalculateNormals(i, j, 10*aa[i][j].x,
+			//	i + 1, j, 10*aa[i + 1][j].x,
+			//	i, j + 1, 10*aa[i][j + 1].x,
+			//	VN
+			//);
 
-			glNormal3f(-VN.nx, -VN.ny, -VN.nz);
+			//glNormal3f(-VN.nx, -VN.ny, -VN.nz);
 			//glNormal3f(-1, -1, -1);
 			glBegin(GL_TRIANGLES);
 			glVertex3f(0 + i, 1 + j, aa[i][j + 1].x);
@@ -211,7 +211,7 @@ void init() {
 
 	//	glShadeModel(GL_FLAT);//w
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+	/*glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -223,7 +223,7 @@ void init() {
 	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0f);
 	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 120.0f);
 
-	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT0);*/
 }
 
 
