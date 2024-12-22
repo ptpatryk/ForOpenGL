@@ -13,4 +13,10 @@
     <PackageReference Include="OpenTK" Version="4.9.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="kernel.cl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -33,7 +33,7 @@
     <None Include="fragment_shader.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="Kernel.cl">
+    <None Include="kernel.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
