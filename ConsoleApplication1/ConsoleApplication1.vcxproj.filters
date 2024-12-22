@@ -21,6 +21,9 @@
     <ClCompile Include="Fale.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="InitGLCL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -28,6 +31,9 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="fragment_shader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Kernel.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

@@ -132,9 +132,11 @@
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
     <ClCompile Include="Fale.cpp" />
+    <ClCompile Include="InitGLCL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl" />
+    <None Include="Kernel.cl" />
     <None Include="packages.config" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>

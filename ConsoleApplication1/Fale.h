@@ -41,6 +41,7 @@ public:
 	_punkt* PobiezStrune();
 
 	void akcja(void);       //oblicza parametry plata biezacego po czasie 'dt'
+	void akcjaFull(void);
 	void akcjaStruna(void);
 	void Inicjuj(int);      //ustawia parametry poczatkowe platow (0-dla f. kulistej, 1-dla zalamania)
 	void InicjujStrune(Sposob sposob, float ile);

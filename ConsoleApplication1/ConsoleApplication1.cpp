@@ -334,6 +334,44 @@ std::thread myThread(threadFunction);
 }
 
 
+//dwie metody wygenerowania wspomagające renderowanie tego co miałem rysować
+
+//void runKernel(Punkt* aa, float dt, float w, int N_X, int N_Y) {
+//	queue.enqueueWriteBuffer(aa_buf, CL_TRUE, 0, sizeof(Punkt) * N_X * N_Y, aa);
+//
+//	kernel.setArg(0, aa_buf);
+//	kernel.setArg(1, bb_buf);
+//	kernel.setArg(2, cl_nbo);
+//	kernel.setArg(3, dt);
+//	kernel.setArg(4, w);
+//	kernel.setArg(5, N_X);
+//	kernel.setArg(6, N_Y);
+//
+//	glFinish();
+//	std::vector<cl::Memory> glObjects = { cl_vbo, cl_nbo };
+//	queue.enqueueAcquireGLObjects(&glObjects);
+//
+//	cl::NDRange global(N_X, N_Y);
+//	queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, cl::NullRange);
+//
+//	queue.enqueueReleaseGLObjects(&glObjects);
+//	queue.finish();
+//}
+
+//void render() {
+//	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//	glVertexAttribPointer(posAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Punkt), 0);
+//	glEnableVertexAttribArray(posAttribLocation);
+//
+//	glBindBuffer(GL_ARRAY_BUFFER, nbo);
+//	glVertexAttribPointer(normAttribLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Normal), 0);
+//	glEnableVertexAttribArray(normAttribLocation);
+//
+//	// ... (rysowanie obiektów)
+//}
+
+
+
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 

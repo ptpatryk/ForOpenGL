@@ -122,6 +122,60 @@ void Fale::akcja(void)
 
 }
 
+
+/// sama akcja
+
+//struct _punkt { float m, v, x; };
+
+void Fale::akcjaFull(void)
+{
+	float dt = dtk;
+	int i, j;
+	//float w = -T/a;
+	float w = -2.0;
+	float F;
+
+	kol = !kol; // stare = nowe
+	czas += dtk;
+
+
+	_punkt** aa; aa = plat[kol];
+	_punkt** bb; bb = plat[!kol];
+
+	Pobudz();
+
+	 for (i=1; i<N_X-1; i++)
+	   for (j=1; j<N_Y-1; j++)
+	   {
+		F = w * (4*aa[i][j].x
+					- aa[i][j+1].x - aa[i][j-1].x
+					- aa[i+1][j].x - aa[i-1][j].x);
+		bb[i][j].v = aa[i][j].v + F/aa[i][j].m * dt;
+		bb[i][j].x = aa[i][j].x + bb[i][j].v * dt;
+	   }
+
+	 //zatrzymanie krawedzi
+	// if (sp==1)
+	{
+		for (i = 0; i < N_X; i++)
+		{
+			bb[i][0].x = 0.0;
+			bb[i][N_Y].x = 0.0;
+		}
+
+		for (i = 0; i < N_Y; i++)
+		{
+			bb[0][i].x = 0.0;
+			bb[N_X][i].x = 0.0;
+		}
+	}
+
+}
+
+
+
+
+
 //---------------------------------------------------------------------------
 
 
