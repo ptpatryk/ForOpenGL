@@ -1,4 +1,18 @@
-﻿            //GL.GenBuffers(1, out vbo);
+﻿    float[] vertices = {
+    // Trójkąt 1
+    -0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+   -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+    // Trójkąt 2
+    -1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+    1.0f,  -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+};
+
+
+
+
+            //GL.GenBuffers(1, out vbo);
             //GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(Punkt) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 

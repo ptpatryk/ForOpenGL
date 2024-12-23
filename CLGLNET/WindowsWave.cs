@@ -38,15 +38,8 @@ namespace CLGLNET
         public float x, y, z, nx, ny, nz;
     }
 
-
     public class WindowsWave : GameWindow
     {
-        //int vbo, nbo;
-        //CLContext clContext;
-        //CLCommandQueue queue;
-        //CLKernel kernel;
-        //CLBuffer aaBuf, bbBuf, clNbo;
-
         int vbo, nbo;
         ComputeContext clContext;
         ComputeCommandQueue queue;
@@ -93,23 +86,8 @@ namespace CLGLNET
             float[] vertices2 = PrzygotujTrojkaty(wieszcholki);
 
             #region rysowania statycznie trójkątów (metoda 2)
-
-            float[] vertices = {
-    // Trójkąt 1
-    -0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
-   -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
-    // Trójkąt 2
-    -1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-    1.0f,  -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-};
-
-
-
+        
             PrzygotowanieBufora(vertices2);
-
-
 
             string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
 
@@ -127,14 +105,6 @@ namespace CLGLNET
             GL.AttachShader(_shaderProgram, vertexShader);
             GL.AttachShader(_shaderProgram, fragmentShader);
             GL.LinkProgram(_shaderProgram);
-
-            //GL.Viewport(0, 0, 100, 100);
-            //GL.MatrixMode(MatrixMode.Projection);
-            //GL.LoadIdentity();
-            //GL.Ortho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
-
-
-            //GL.Rotate(10.3, 0, 1, 0);
 
 
             GL.DeleteShader(vertexShader);
@@ -269,59 +239,8 @@ namespace CLGLNET
             queue.Finish();
 
             return normals;
-
-            //Render();
         }
 
-        unsafe void Render()
-        {
 
-
-
-            #region renderowanie ze zmiennej vertix 
-
-            //GL.Clear(ClearBufferMask.ColorBufferBit);
-
-
-
-
-            //GL.UseProgram(_shaderProgram);
-            //GL.BindVertexArray(_vertexArrayObject);
-            //GL.DrawArrays(PrimitiveType.Triangles, 0, 600);//rysuje 6 wierzchołków (2 trójkąty)
-
-
-
-
-
-
-            #endregion
-
-            #region próba rysowania trójkątów z płata - do poprawy
-
-            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            //GL.VertexAttribPointer(0, 6, VertexAttribPointerType.Float, false, sizeof(PunktNormal), IntPtr.Zero);
-            //GL.EnableVertexAttribArray(0);
-
-            //GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y);
-
-            #endregion
-
-
-
-            // Ustawienie kamery pod pewnym kątem
-            // With the following code
-            //Matrix4 projection = Matrix4.CreateOrthographic(100.0f, 100.0f, -1.0f, 1.0f);
-            //GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
-
-            // Replace the following lines in the Render method
-            // GL.MatrixMode(MatrixMode.Modelview);
-            // GL.LoadMatrix(ref modelview);
-
-            // With the following code
-            // GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "modelview"), false, ref modelview);
-
-        }
     }
 }
