@@ -61,7 +61,7 @@ namespace CLGLNET
         public WindowsWave(int width, int height, string title)
             : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
         {
-            
+
         }
 
 
@@ -69,11 +69,8 @@ namespace CLGLNET
         {
             base.OnLoad();
 
-            
-            // Inicjalizacja OpenGL
-            InitOpenGL();
+            //InitOpenGL(); - to było do metody 1
 
-            // Inicjalizacja OpenCL
             InitOpenCL();
 
             // Przykładowe dane
@@ -84,11 +81,10 @@ namespace CLGLNET
                 aa[i].m = 1.0f;
             }
 
-
-
             // Uruchomienie kernela
-            RunKernel(aa);
+            var wieszcholki = RunKernel(aa);
 
+            float[] vertices2 = PrzygotujTrojkaty(wieszcholki);
 
             #region rysowania statycznie trójkątów (metoda 2)
 
@@ -103,35 +99,11 @@ namespace CLGLNET
     1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
 };
 
-            _vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            PrzygotowanieBufora(vertices2);
 
-            _vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(_vertexArrayObject);
+            string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
 
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-
-            string vertexShaderSource = @"
-        #version 330 core
-        layout(location = 0) in vec3 aPosition;
-        layout(location = 1) in vec3 aNormal;
-        void main()
-        {
-            gl_Position = vec4(aPosition, 1.0);
-        }";
-
-            string fragmentShaderSource = @"
-        #version 330 core
-        out vec4 FragColor;
-        void main()
-        {
-            FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-        }";
+            string fragmentShaderSource = File.ReadAllText("fragment_shader.glsl");
 
             int vertexShader = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(vertexShader, vertexShaderSource);
@@ -152,10 +124,50 @@ namespace CLGLNET
             #endregion
         }
 
+        private float[] PrzygotujTrojkaty(PunktNormal[] wieszcholki)
+        {
+            List<float> vertices = new List<float>();
+
+            for (int i = 0; i < N_Y-1; i++)
+                for (int j = 0; j < N_X-1; j++)
+                {
+                    AddVwrtex(vertices, wieszcholki, i, j);
+                    AddVwrtex(vertices, wieszcholki, i+1, j);
+                    AddVwrtex(vertices, wieszcholki, i, j+1);
+                }
+
+            return vertices.ToArray();
+        }
+
+        private void AddVwrtex(List<float> vertices, PunktNormal[] wieszcholki, int i, int j)
+        {
+            vertices.Add(wieszcholki[i * N_Y + j].x);
+            vertices.Add(wieszcholki[i * N_Y + j].y);
+            vertices.Add(wieszcholki[i * N_Y + j].z);
+            vertices.Add(wieszcholki[i * N_Y + j].nx);
+            vertices.Add(wieszcholki[i * N_Y + j].ny);
+            vertices.Add(wieszcholki[i * N_Y + j].nz);
+        }
+
+        private void PrzygotowanieBufora(float[] vertices)
+        {
+            _vertexBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            _vertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(_vertexArrayObject);
+
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+        }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            base.OnRenderFrame(e);         
+            base.OnRenderFrame(e);
 
             Render();
 
@@ -188,7 +200,7 @@ namespace CLGLNET
             clNbo = new ComputeBuffer<PunktNormal>(clContext, ComputeMemoryFlags.WriteOnly, N_X * N_Y);
         }
 
-        unsafe void RunKernel(Punkt[] aa)
+        unsafe PunktNormal[] RunKernel(Punkt[] aa)
         {
             queue.WriteToBuffer(aa, aaBuf, true, null);
 
@@ -204,7 +216,6 @@ namespace CLGLNET
             kernelTrujkatow.SetValueArgument(2, N_X);
             kernelTrujkatow.SetValueArgument(3, N_Y);
 
-
             GL.Finish();
             //queue.AcquireGLObjects(new[] { clNbo }, null);
 
@@ -216,10 +227,10 @@ namespace CLGLNET
             PunktNormal[] normals = new PunktNormal[N_X * N_Y]; // Initialize the array
             queue.ReadFromBuffer(clNbo, ref normals, true, null);
 
-
-
             //queue.ReleaseGLObjects(new[] { clNbo }, null);
             queue.Finish();
+
+            return normals;
 
             //Render();
         }
@@ -238,20 +249,15 @@ namespace CLGLNET
 
             #region próba rysowania trójkątów z płata - do poprawy
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            GL.VertexAttribPointer(0, 6, VertexAttribPointerType.Float, false, sizeof(PunktNormal), IntPtr.Zero);
-            GL.EnableVertexAttribArray(0);
-          
-            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y);
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+            //GL.VertexAttribPointer(0, 6, VertexAttribPointerType.Float, false, sizeof(PunktNormal), IntPtr.Zero);
+            //GL.EnableVertexAttribArray(0);
+
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y);
 
             #endregion
-
-
         }
-
-
     }
-
 }
