@@ -199,9 +199,9 @@ namespace CLGLNET
 
         unsafe void InitOpenGL()
         {
-            GL.GenBuffers(1, out vbo);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(Punkt) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.GenBuffers(1, out vbo);
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(Punkt) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             GL.GenBuffers(1, out nbo);
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
@@ -279,6 +279,8 @@ namespace CLGLNET
             PunktNormal[] normals = new PunktNormal[N_X * N_Y]; // Initialize the array
             queue.ReadFromBuffer(clNbo, ref normals, true, null);
 
+
+
             //queue.ReleaseGLObjects(new[] { clNbo }, null);
             queue.Finish();
 
@@ -288,7 +290,7 @@ namespace CLGLNET
         unsafe void Render()
         {
 
-
+            /*
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Punkt), IntPtr.Zero);
             GL.EnableVertexAttribArray(0);
@@ -296,7 +298,25 @@ namespace CLGLNET
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(PunktNormal), IntPtr.Zero);
             GL.EnableVertexAttribArray(1);
+            */
+
+            
+            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+            GL.VertexAttribPointer(0, 6, VertexAttribPointerType.Float, false, sizeof(PunktNormal), IntPtr.Zero);
+            GL.EnableVertexAttribArray(0);
+            
+
+
+            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y);
             // ... (rysowanie obiektów)
+
+
+
+            //GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            //GL.UseProgram(_shaderProgram);
+            //GL.BindVertexArray(_vertexArrayObject);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, 6);//rysuje 6 wierzchołków (2 trójkąty)
         }
 
         /*
