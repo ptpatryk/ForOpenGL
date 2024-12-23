@@ -1,11 +1,16 @@
-﻿//using OpenTK.Mathematics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
+//using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.GL;
+
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
+
 using Cloo;
 using System;
 using System.IO;
@@ -16,6 +21,7 @@ using OpenTK.Compute.OpenCL;
 using System;
 using System.IO;
 using OpenTK.Windowing.Common;
+using OpenTK.Mathematics;
 
 
 namespace CLGLNET
@@ -99,7 +105,11 @@ namespace CLGLNET
     1.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
 };
 
+
+
             PrzygotowanieBufora(vertices2);
+
+
 
             string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
 
@@ -118,8 +128,18 @@ namespace CLGLNET
             GL.AttachShader(_shaderProgram, fragmentShader);
             GL.LinkProgram(_shaderProgram);
 
+            //GL.Viewport(0, 0, 100, 100);
+            //GL.MatrixMode(MatrixMode.Projection);
+            //GL.LoadIdentity();
+            //GL.Ortho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
+
+
+            //GL.Rotate(10.3, 0, 1, 0);
+
+
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
+
 
             #endregion
         }
@@ -128,12 +148,12 @@ namespace CLGLNET
         {
             List<float> vertices = new List<float>();
 
-            for (int i = 0; i < N_Y-1; i++)
-                for (int j = 0; j < N_X-1; j++)
+            for (int i = 0; i < N_Y - 1; i++)
+                for (int j = 0; j < N_X - 1; j++)
                 {
                     AddVwrtex(vertices, wieszcholki, i, j);
-                    AddVwrtex(vertices, wieszcholki, i+1, j);
-                    AddVwrtex(vertices, wieszcholki, i, j+1);
+                    AddVwrtex(vertices, wieszcholki, i, j + 1);
+                    AddVwrtex(vertices, wieszcholki, i + 1, j);
                 }
 
             return vertices.ToArray();
@@ -141,8 +161,8 @@ namespace CLGLNET
 
         private void AddVwrtex(List<float> vertices, PunktNormal[] wieszcholki, int i, int j)
         {
-            vertices.Add(wieszcholki[i * N_Y + j].x);
-            vertices.Add(wieszcholki[i * N_Y + j].y);
+            vertices.Add(wieszcholki[i * N_Y + j].x-40f);
+            vertices.Add(wieszcholki[i * N_Y + j].y-40f);
             vertices.Add(wieszcholki[i * N_Y + j].z);
             vertices.Add(wieszcholki[i * N_Y + j].nx);
             vertices.Add(wieszcholki[i * N_Y + j].ny);
@@ -167,9 +187,27 @@ namespace CLGLNET
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            base.OnRenderFrame(e);
+            //base.OnRenderFrame(e);
 
-            Render();
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            GL.UseProgram(_shaderProgram);
+            GL.BindVertexArray(_vertexArrayObject);
+            GL.LoadIdentity();
+
+            // Rotate the image
+            Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
+            Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
+            Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
+
+            Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
+            GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
+
+
+            int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
+            GL.UniformMatrix4(location, false, ref rotationMatrix);
+
+            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y*2);
 
             SwapBuffers();
         }
@@ -237,13 +275,24 @@ namespace CLGLNET
 
         unsafe void Render()
         {
+
+
+
             #region renderowanie ze zmiennej vertix 
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            //GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.UseProgram(_shaderProgram);
-            GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);//rysuje 6 wierzchołków (2 trójkąty)
+
+
+
+            //GL.UseProgram(_shaderProgram);
+            //GL.BindVertexArray(_vertexArrayObject);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, 600);//rysuje 6 wierzchołków (2 trójkąty)
+
+
+
+
+
 
             #endregion
 
@@ -258,6 +307,21 @@ namespace CLGLNET
             //GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y);
 
             #endregion
+
+
+
+            // Ustawienie kamery pod pewnym kątem
+            // With the following code
+            //Matrix4 projection = Matrix4.CreateOrthographic(100.0f, 100.0f, -1.0f, 1.0f);
+            //GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
+
+            // Replace the following lines in the Render method
+            // GL.MatrixMode(MatrixMode.Modelview);
+            // GL.LoadMatrix(ref modelview);
+
+            // With the following code
+            // GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "modelview"), false, ref modelview);
+
         }
     }
 }
