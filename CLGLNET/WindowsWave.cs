@@ -64,6 +64,9 @@ namespace CLGLNET
         }
 
 
+        private int _vertexShader;
+        private int _fragmentShader;
+
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -86,32 +89,48 @@ namespace CLGLNET
             float[] vertices2 = PrzygotujTrojkaty(wieszcholki);
 
             #region rysowania statycznie trójkątów (metoda 2)
-        
+
             PrzygotowanieBufora(vertices2);
 
             string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
 
             string fragmentShaderSource = File.ReadAllText("fragment_shader.glsl");
 
-            int vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(vertexShader, vertexShaderSource);
-            GL.CompileShader(vertexShader);
+            _vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(_vertexShader, vertexShaderSource);
+            GL.CompileShader(_vertexShader);
 
-            int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(fragmentShader, fragmentShaderSource);
-            GL.CompileShader(fragmentShader);
+            _fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(_fragmentShader, fragmentShaderSource);
+            GL.CompileShader(_fragmentShader);
 
             _shaderProgram = GL.CreateProgram();
-            GL.AttachShader(_shaderProgram, vertexShader);
-            GL.AttachShader(_shaderProgram, fragmentShader);
+            GL.AttachShader(_shaderProgram, _vertexShader);
+            GL.AttachShader(_shaderProgram, _fragmentShader);
             GL.LinkProgram(_shaderProgram);
 
-
-            GL.DeleteShader(vertexShader);
-            GL.DeleteShader(fragmentShader);
-
-
             #endregion
+        }
+
+        protected override void OnUnload()
+        {
+            base.OnUnload();
+
+            // Zwolnienie zasobów OpenGL
+            GL.DeleteShader(_vertexShader);
+            GL.DeleteShader(_fragmentShader);
+            GL.DeleteProgram(_shaderProgram);
+            GL.DeleteBuffer(_vertexBufferObject);
+            GL.DeleteVertexArray(_vertexArrayObject);
+
+            // Zwolnienie zasobów OpenCL
+            clNbo.Dispose();
+            bbBuf.Dispose();
+            aaBuf.Dispose();
+            kernelTrujkatow.Dispose();
+            kernel.Dispose();
+            queue.Dispose();
+            clContext.Dispose();
         }
 
         private float[] PrzygotujTrojkaty(PunktNormal[] wieszcholki)
