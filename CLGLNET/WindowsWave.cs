@@ -71,7 +71,7 @@ namespace CLGLNET
         {
             base.OnLoad();
 
-            InitOpenGL(); //- to było do metody 1
+            InitOpenGL(); 
 
             InitOpenCL();
 
@@ -88,13 +88,7 @@ namespace CLGLNET
 
             float[] vertices2 = PrzygotujTrojkaty(wieszcholki);
 
-            #region rysowania statycznie trójkątów (metoda 2)
-
             PrzygotowanieBufora(vertices2);
-
-            
-
-            #endregion
         }
 
         protected override void OnUnload()
