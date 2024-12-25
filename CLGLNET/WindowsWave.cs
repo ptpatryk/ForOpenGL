@@ -57,12 +57,12 @@ namespace CLGLNET
         private int _vertexArrayObject;
         private int _shaderProgram;
 
+      
         public WindowsWave(int width, int height, string title)
-            : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
+            : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
         {
 
         }
-
 
         private int _vertexShader;
         private int _fragmentShader;
