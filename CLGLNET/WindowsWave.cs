@@ -71,7 +71,7 @@ namespace CLGLNET
         {
             base.OnLoad();
 
-            //InitOpenGL(); - to było do metody 1
+            InitOpenGL(); //- to było do metody 1
 
             InitOpenCL();
 
@@ -92,22 +92,7 @@ namespace CLGLNET
 
             PrzygotowanieBufora(vertices2);
 
-            string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
-
-            string fragmentShaderSource = File.ReadAllText("fragment_shader.glsl");
-
-            _vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(_vertexShader, vertexShaderSource);
-            GL.CompileShader(_vertexShader);
-
-            _fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(_fragmentShader, fragmentShaderSource);
-            GL.CompileShader(_fragmentShader);
-
-            _shaderProgram = GL.CreateProgram();
-            GL.AttachShader(_shaderProgram, _vertexShader);
-            GL.AttachShader(_shaderProgram, _fragmentShader);
-            GL.LinkProgram(_shaderProgram);
+            
 
             #endregion
         }
@@ -203,9 +188,34 @@ namespace CLGLNET
 
         unsafe void InitOpenGL()
         {
+            #region tu mam problem miało być to do dzielenia zasobów między OpenCL i OpenGL
+
             GL.GenBuffers(1, out nbo);
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
             GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+            #endregion
+
+            #region przygotawanie schaderów
+
+            string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
+
+            string fragmentShaderSource = File.ReadAllText("fragment_shader.glsl");
+
+            _vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(_vertexShader, vertexShaderSource);
+            GL.CompileShader(_vertexShader);
+
+            _fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(_fragmentShader, fragmentShaderSource);
+            GL.CompileShader(_fragmentShader);
+
+            _shaderProgram = GL.CreateProgram();
+            GL.AttachShader(_shaderProgram, _vertexShader);
+            GL.AttachShader(_shaderProgram, _fragmentShader);
+            GL.LinkProgram(_shaderProgram);
+
+            #endregion
         }
 
         unsafe void InitOpenCL()
