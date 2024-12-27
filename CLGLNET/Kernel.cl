@@ -21,7 +21,7 @@ __kernel void obliczWspolrzedne(__global Punkt* aa, __global Punkt* bb, float dt
         bb[i * N_Y + j].x = aa[i * N_Y + j].x + bb[i * N_Y + j].v * dt;
     }
 
-    if (czas < 12.56) {
+    if (czas < 12.56 && i==50 && j==50) {
          bb[5050].v=zv;
     }
 
@@ -62,5 +62,36 @@ __kernel void obliczNormalne(__global Punkt* bb, __global PunktNormal* punorm, i
         punorm[i * N_Y + j].nx = 0.0;
         punorm[i * N_Y + j].ny = 0.0;
         punorm[i * N_Y + j].nz = 1.0;
+    }
+}
+
+__kernel void przygotujTrojkaty(__global PunktNormal* wieszcholki, __global float* vertices, int N_X, int N_Y) {
+    int i = get_global_id(0);
+    int j = get_global_id(1);
+
+    if (i < N_Y - 1 && j < N_X - 1) {
+        int index = (i * (N_X - 1) + j) * 18; // 6 vertices per triangle, 3 coordinates per vertex
+
+        // First triangle
+        vertices[index] = wieszcholki[i * N_Y + j].x - 40.0f;
+        vertices[index + 1] = wieszcholki[i * N_Y + j].y - 40.0f;
+        vertices[index + 2] = wieszcholki[i * N_Y + j].z;
+        vertices[index + 3] = wieszcholki[i * N_Y + j].nx;
+        vertices[index + 4] = wieszcholki[i * N_Y + j].ny;
+        vertices[index + 5] = wieszcholki[i * N_Y + j].nz;
+
+        vertices[index + 6] = wieszcholki[i * N_Y + (j + 1)].x - 40.0f;
+        vertices[index + 7] = wieszcholki[i * N_Y + (j + 1)].y - 40.0f;
+        vertices[index + 8] = wieszcholki[i * N_Y + (j + 1)].z;
+        vertices[index + 9] = wieszcholki[i * N_Y + (j + 1)].nx;
+        vertices[index + 10] = wieszcholki[i * N_Y + (j + 1)].ny;
+        vertices[index + 11] = wieszcholki[i * N_Y + (j + 1)].nz;
+
+        vertices[index + 12] = wieszcholki[(i + 1) * N_Y + j].x - 40.0f;
+        vertices[index + 13] = wieszcholki[(i + 1) * N_Y + j].y - 40.0f;
+        vertices[index + 14] = wieszcholki[(i + 1) * N_Y + j].z;
+        vertices[index + 15] = wieszcholki[(i + 1) * N_Y + j].nx;
+        vertices[index + 16] = wieszcholki[(i + 1) * N_Y + j].ny;
+        vertices[index + 17] = wieszcholki[(i + 1) * N_Y + j].nz;
     }
 }

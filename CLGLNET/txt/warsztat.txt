@@ -1,0 +1,271 @@
+﻿private void SynchronizeOpenGLAndOpenCL()
+{
+    // Ensure OpenGL has finished its operations
+    GL.Finish();
+
+    // Acquire OpenGL objects for OpenCL
+    queue.AcquireGLObjects(new[] { clNbo }, null);
+
+    // Execute OpenCL kernels
+    var globalWorkSize = new long[] { N_X, N_Y };
+    queue.Execute(kernel, null, globalWorkSize, null, null);
+    queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
+
+    // Release OpenGL objects from OpenCL
+    queue.ReleaseGLObjects(new[] { clNbo }, null);
+
+    // Ensure OpenCL has finished its operations
+    queue.Finish();
+}
+
+protected override void OnRenderFrame(FrameEventArgs e)
+{
+    // Synchronize OpenGL and OpenCL resources
+    SynchronizeOpenGLAndOpenCL();
+
+    // Clear the screen
+    GL.Clear(ClearBufferMask.ColorBufferBit);
+
+    // Use the shader program
+    GL.UseProgram(_shaderProgram);
+    GL.BindVertexArray(_vertexArrayObject);
+    GL.LoadIdentity();
+
+    // Rotate the image
+    Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
+    Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
+    Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
+
+    Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
+    GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
+
+    int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
+    GL.UniformMatrix4(location, false, ref rotationMatrix);
+
+    // Draw the triangles
+    GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
+
+    // Swap the buffers
+    SwapBuffers();
+}
+
+
+   GL.GenBuffers(1, out nbo);
+   GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+   GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+   
+
+   clNbo = new ComputeBufferGL<PunktNormal>(clContext, ComputeMemoryFlags.ReadWrite, nbo);
+   
+unsafe void InitOpenGL()
+{
+    #region tu mam problem miało być to do dzielenia zasobów między OpenCL i OpenGL
+
+    GL.GenBuffers(1, out nbo);
+    GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+    GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+    #endregion
+
+    #region przygotawanie schaderów
+
+    string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
+    string fragmentShaderSource = File.ReadAllText("fragment_shader.glsl");
+
+    _vertexShader = GL.CreateShader(ShaderType.VertexShader);
+    GL.ShaderSource(_vertexShader, vertexShaderSource);
+    GL.CompileShader(_vertexShader);
+
+    _fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+    GL.ShaderSource(_fragmentShader, fragmentShaderSource);
+    GL.CompileShader(_fragmentShader);
+
+    _shaderProgram = GL.CreateProgram();
+    GL.AttachShader(_shaderProgram, _vertexShader);
+    GL.AttachShader(_shaderProgram, _fragmentShader);
+    GL.LinkProgram(_shaderProgram);
+
+    #endregion
+}
+
+unsafe void InitOpenCL()
+{
+    var platform = ComputePlatform.Platforms[0];
+    var devices = platform.Devices;
+
+    clContext = new ComputeContext(devices, new ComputeContextPropertyList(platform), null, IntPtr.Zero);
+    queue = new ComputeCommandQueue(clContext, devices[0], ComputeCommandQueueFlags.None);
+
+    string kernelSource = File.ReadAllText("kernel.cl");
+    var program = new ComputeProgram(clContext, kernelSource);
+    program.Build(devices, null, null, IntPtr.Zero);
+    kernel = program.CreateKernel("obliczWspolrzedne");
+    kernelTrujkatow = program.CreateKernel("obliczNormalne");
+
+    aaBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
+    bbBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+    clNbo = new ComputeBufferGL<PunktNormal>(clContext, ComputeMemoryFlags.ReadWrite, nbo);
+}
+
+
+unsafe void RunKernel(Punkt[] aa)
+{
+    lock (_bufferLock)
+    {
+        queue.WriteToBuffer(aa, aaBuf, true, null);
+
+        kernel.SetMemoryArgument(0, aaBuf);
+        kernel.SetMemoryArgument(1, bbBuf);
+        kernel.SetValueArgument(2, dt);
+        kernel.SetValueArgument(3, w);
+        kernel.SetValueArgument(4, N_X);
+        kernel.SetValueArgument(5, N_Y);
+
+        kernel.SetValueArgument(6, (float)Math.Sin(czas));
+        kernel.SetValueArgument(7, czas);
+
+        kernelTrujkatow.SetMemoryArgument(0, bbBuf);
+        kernelTrujkatow.SetMemoryArgument(1, clNbo);
+        kernelTrujkatow.SetValueArgument(2, N_X);
+        kernelTrujkatow.SetValueArgument(3, N_Y);
+
+        GL.Finish();
+        queue.AcquireGLObjects(new[] { clNbo }, null); //przydzielenie bufora dla CL
+
+        var globalWorkSize = new long[] { N_X, N_Y };
+
+        queue.Execute(kernel, null, globalWorkSize, null, null);
+        queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
+
+        queue.ReadFromBuffer(clNbo, ref punktyINormalne, true, null);  //Zwolnienie bufora z CL
+
+        queue.ReleaseGLObjects(new[] { clNbo }, null);
+        queue.Finish();
+    }
+}
+
+__kernel void przygotujTrojkaty(__global PunktNormal* wieszcholki, __global float* vertices, int N_X, int N_Y) {
+    int i = get_global_id(0);
+    int j = get_global_id(1);
+
+    if (i < N_Y - 1 && j < N_X - 1) {
+        int index = (i * (N_X - 1) + j) * 18; // 6 vertices per triangle, 3 coordinates per vertex
+
+        // First triangle
+        vertices[index] = wieszcholki[i * N_Y + j].x - 40.0f;
+        vertices[index + 1] = wieszcholki[i * N_Y + j].y - 40.0f;
+        vertices[index + 2] = wieszcholki[i * N_Y + j].z;
+        vertices[index + 3] = wieszcholki[i * N_Y + j].nx;
+        vertices[index + 4] = wieszcholki[i * N_Y + j].ny;
+        vertices[index + 5] = wieszcholki[i * N_Y + j].nz;
+
+        vertices[index + 6] = wieszcholki[i * N_Y + (j + 1)].x - 40.0f;
+        vertices[index + 7] = wieszcholki[i * N_Y + (j + 1)].y - 40.0f;
+        vertices[index + 8] = wieszcholki[i * N_Y + (j + 1)].z;
+        vertices[index + 9] = wieszcholki[i * N_Y + (j + 1)].nx;
+        vertices[index + 10] = wieszcholki[i * N_Y + (j + 1)].ny;
+        vertices[index + 11] = wieszcholki[i * N_Y + (j + 1)].nz;
+
+        vertices[index + 12] = wieszcholki[(i + 1) * N_Y + j].x - 40.0f;
+        vertices[index + 13] = wieszcholki[(i + 1) * N_Y + j].y - 40.0f;
+        vertices[index + 14] = wieszcholki[(i + 1) * N_Y + j].z;
+        vertices[index + 15] = wieszcholki[(i + 1) * N_Y + j].nx;
+        vertices[index + 16] = wieszcholki[(i + 1) * N_Y + j].ny;
+        vertices[index + 17] = wieszcholki[(i + 1) * N_Y + j].nz;
+    }
+}
+
+unsafe void InitOpenCL_XX()
+{
+    var platform = ComputePlatform.Platforms[0];
+    var devices = platform.Devices;
+
+    clContext = new ComputeContext(devices, new ComputeContextPropertyList(platform), null, IntPtr.Zero);
+    queue = new ComputeCommandQueue(clContext, devices[0], ComputeCommandQueueFlags.None);
+
+    string kernelSource = File.ReadAllText("kernel.cl");
+    var program = new ComputeProgram(clContext, kernelSource);
+    program.Build(devices, null, null, IntPtr.Zero);
+    kernel = program.CreateKernel("obliczWspolrzedne");
+    kernelTrujkatow = program.CreateKernel("obliczNormalne");
+    var kernelPrzygotujTrojkaty = program.CreateKernel("przygotujTrojkaty");
+
+    aaBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
+    bbBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+    clNbo = new ComputeBuffer<PunktNormal>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+    var vertexBuffer = new ComputeBuffer<float>(clContext, ComputeMemoryFlags.WriteOnly, (N_X - 1) * (N_Y - 1) * 18);
+}
+
+
+unsafe void RunKernel_XX(Punkt[] aa)
+{
+    lock (_bufferLock)
+    {
+        queue.WriteToBuffer(aa, aaBuf, true, null);
+
+        kernel.SetMemoryArgument(0, aaBuf);
+        kernel.SetMemoryArgument(1, bbBuf);
+        kernel.SetValueArgument(2, dt);
+        kernel.SetValueArgument(3, w);
+        kernel.SetValueArgument(4, N_X);
+        kernel.SetValueArgument(5, N_Y);
+
+        //do wzbudzenia fal
+        kernel.SetValueArgument(6, (float)Math.Sin(czas));
+        kernel.SetValueArgument(7, czas);
+
+        kernelTrujkatow.SetMemoryArgument(0, bbBuf);
+        kernelTrujkatow.SetMemoryArgument(1, clNbo);
+        kernelTrujkatow.SetValueArgument(2, N_X);
+        kernelTrujkatow.SetValueArgument(3, N_Y);
+
+        var globalWorkSize = new long[] { N_X, N_Y };
+
+        queue.Execute(kernel, null, globalWorkSize, null, null);
+        queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
+
+        // Now execute the new kernel to prepare triangles
+        var kernelPrzygotujTrojkaty = program.CreateKernel("przygotujTrojkaty");
+        kernelPrzygotujTrojkaty.SetMemoryArgument(0, clNbo);
+        kernelPrzygotujTrojkaty.SetMemoryArgument(1, vertexBuffer);
+        kernelPrzygotujTrojkaty.SetValueArgument(2, N_X);
+        kernelPrzygotujTrojkaty.SetValueArgument(3, N_Y);
+
+        queue.Execute(kernelPrzygotujTrojkaty, null, globalWorkSize, null, null);
+
+        queue.ReadFromBuffer(vertexBuffer, ref punktyINormalne, true, null);
+        queue.Finish();
+    }
+}
+
+
+private void PrzygotowanieBufora__XX()
+{
+    lock (_bufferLock)
+    {
+        if (_vertexBufferObject == 0)
+        {
+            _vertexBufferObject = GL.GenBuffer();
+        }
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+
+        GL.BufferData(BufferTarget.ArrayBuffer, punktyINormalne.Length * sizeof(float), punktyINormalne, BufferUsageHint.DynamicDraw);
+
+        if (_vertexArrayObject == 0)
+        {
+            _vertexArrayObject = GL.GenVertexArray();
+        }
+        GL.BindVertexArray(_vertexArrayObject);
+
+        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+        GL.EnableVertexAttribArray(0);
+
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+        GL.EnableVertexAttribArray(1);
+    }
+}
+
+
+
+
+
