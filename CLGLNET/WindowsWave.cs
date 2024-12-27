@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using OpenTK.Windowing.Common;
 using OpenTK.Mathematics;
+using System.Threading.Tasks.Dataflow;
 
 
 namespace CLGLNET
@@ -52,43 +53,50 @@ namespace CLGLNET
         int N_Y = 100;
         float dt = 0.01f;
         float w = -2.0f;
+        PunktNormal[] punktyINormalne;
+        Punkt[] aa;
 
         private int _vertexBufferObject;
         private int _vertexArrayObject;
         private int _shaderProgram;
 
-      
+
         public WindowsWave(int width, int height, string title)
             : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
         {
+            punktyINormalne = new PunktNormal[N_X * N_Y];
 
-        }
-
-        private int _vertexShader;
-        private int _fragmentShader;
-
-        protected override void OnLoad()
-        {
-            base.OnLoad();
-
-            InitOpenGL(); 
-
-            InitOpenCL();
-
-            // Przykładowe dane
-            Punkt[] aa = new Punkt[N_X * N_Y];
+            aa = new Punkt[N_X * N_Y];
 
             for (int i = 0; i < aa.Length; i++)
             {
                 aa[i].m = 1.0f;
             }
 
-            // Uruchomienie kernela
-            var wieszcholki = RunKernel(aa);
+        }
 
-            float[] vertices2 = PrzygotujTrojkaty(wieszcholki);
+        private int _vertexShader;
+        private int _fragmentShader;
+        private float czas=0.0f;
+
+        protected override void OnLoad()
+        {
+            base.OnLoad();
+
+            InitOpenGL();
+
+            InitOpenCL();
+
+            // Przykładowe dane
+
+            // Uruchomienie kernela
+            RunKernel(aa);
+
+            float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
 
             PrzygotowanieBufora(vertices2);
+
+            Akcja();
         }
 
         protected override void OnUnload()
@@ -129,8 +137,8 @@ namespace CLGLNET
 
         private void AddVwrtex(List<float> vertices, PunktNormal[] wieszcholki, int i, int j)
         {
-            vertices.Add(wieszcholki[i * N_Y + j].x-40f);
-            vertices.Add(wieszcholki[i * N_Y + j].y-40f);
+            vertices.Add(wieszcholki[i * N_Y + j].x - 40f);
+            vertices.Add(wieszcholki[i * N_Y + j].y - 40f);
             vertices.Add(wieszcholki[i * N_Y + j].z);
             vertices.Add(wieszcholki[i * N_Y + j].nx);
             vertices.Add(wieszcholki[i * N_Y + j].ny);
@@ -139,11 +147,17 @@ namespace CLGLNET
 
         private void PrzygotowanieBufora(float[] vertices)
         {
-            _vertexBufferObject = GL.GenBuffer();
+            if (_vertexBufferObject == 0)
+            {
+                _vertexBufferObject = GL.GenBuffer();
+            }
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
 
-            _vertexArrayObject = GL.GenVertexArray();
+            if (_vertexArrayObject == 0)
+            {
+                _vertexArrayObject = GL.GenVertexArray();
+            }
             GL.BindVertexArray(_vertexArrayObject);
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
@@ -175,7 +189,7 @@ namespace CLGLNET
             int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
             GL.UniformMatrix4(location, false, ref rotationMatrix);
 
-            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y*2);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
 
             SwapBuffers();
         }
@@ -226,12 +240,13 @@ namespace CLGLNET
             kernel = program.CreateKernel("obliczWspolrzedne");
             kernelTrujkatow = program.CreateKernel("obliczNormalne");
 
-            aaBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadOnly | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
+            aaBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
             bbBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+            //bbBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
             clNbo = new ComputeBuffer<PunktNormal>(clContext, ComputeMemoryFlags.WriteOnly, N_X * N_Y);
         }
 
-        unsafe PunktNormal[] RunKernel(Punkt[] aa)
+        unsafe void RunKernel(Punkt[] aa)
         {
             queue.WriteToBuffer(aa, aaBuf, true, null);
 
@@ -241,6 +256,11 @@ namespace CLGLNET
             kernel.SetValueArgument(3, w);
             kernel.SetValueArgument(4, N_X);
             kernel.SetValueArgument(5, N_Y);
+
+            //do wzbudzenia fal
+            kernel.SetValueArgument(6, (float)Math.Sin(czas));
+            kernel.SetValueArgument(7, czas);
+
 
             kernelTrujkatow.SetMemoryArgument(0, bbBuf);
             kernelTrujkatow.SetMemoryArgument(1, clNbo);
@@ -255,13 +275,112 @@ namespace CLGLNET
             queue.Execute(kernel, null, globalWorkSize, null, null);
             queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
 
-            PunktNormal[] normals = new PunktNormal[N_X * N_Y]; // Initialize the array
-            queue.ReadFromBuffer(clNbo, ref normals, true, null);
+
+            queue.ReadFromBuffer(clNbo, ref punktyINormalne, true, null);
 
             //queue.ReleaseGLObjects(new[] { clNbo }, null);
             queue.Finish();
+        }
+        void UpdateSinglePoint(int index, Punkt newValue)
+        {
+            queue.WriteToBuffer(new Punkt[] { newValue }, aaBuf, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), 0, 1, null);
+            // Update the value in the local array
+            //punktyINormalne[index].x = newValue.x;
+            //punktyINormalne[index].y = newValue.y;
+            //punktyINormalne[index].z = 5;
 
-            return normals;
+            // Write the updated value to the OpenCL buffer
+            //queue.WriteToBuffer(new Punkt[] { newValue }, aaBuf, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), null);
+        }
+
+        private readonly object _syncLock = new object();
+
+        async Task Akcja()
+        {
+            bool kt = false;
+            while (true)
+            {
+                lock (_syncLock)
+                {
+                    kt = RunKernelUpdate(kt, czas);
+                    czas += dt;
+
+                    float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
+
+                    PrzygotowanieBufora(vertices2);
+                }
+
+                await Task.Delay(1000);
+            }
+        }
+
+        //async Task Akcja()
+        //{
+        //    bool kt = false;
+        //    while (true)
+        //    {
+        //        kt = RunKernelUpdate(kt, czas);
+        //        czas += dt;
+
+        //        float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
+
+        //        PrzygotowanieBufora(vertices2);
+
+        //        Thread.Sleep(300);
+
+
+        //    }
+
+        //}
+
+        object _bufferLock = new object();
+
+        unsafe bool RunKernelUpdate(bool kt, float czas)
+        {
+            var b1 = kt ? aaBuf : bbBuf;
+            var b2 = kt ? bbBuf : aaBuf;
+
+            lock (_bufferLock)
+            {
+                //if (czas < 4 * 3.14)
+                //{
+                //    int index = N_Y * 50 + 50;
+                //    aa[index].v = (float)Math.Sin(czas);
+                //    aa[index].x = punktyINormalne[index].z; //w tablicy aa x odpowiada z
+                //    queue.WriteToBuffer(new Punkt[] { aa[index] }, b1, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), 0, 1, null);
+                //}
+
+                kernel.SetMemoryArgument(0, b1);
+                kernel.SetMemoryArgument(1, b2);
+                kernel.SetValueArgument(2, dt);
+                kernel.SetValueArgument(3, w);
+                kernel.SetValueArgument(4, N_X);
+                kernel.SetValueArgument(5, N_Y);
+
+                //do wzbudzenia fal
+                kernel.SetValueArgument(6, (float)Math.Sin(czas));
+                kernel.SetValueArgument(7, czas);
+
+                kernelTrujkatow.SetMemoryArgument(0, b2);
+                kernelTrujkatow.SetMemoryArgument(1, clNbo);
+                kernelTrujkatow.SetValueArgument(2, N_X);
+                kernelTrujkatow.SetValueArgument(3, N_Y);
+
+                //GL.Finish();
+                //queue.AcquireGLObjects(new[] { clNbo }, null);
+
+                var globalWorkSize = new long[] { N_X, N_Y };
+
+                queue.Execute(kernel, null, globalWorkSize, null, null);
+                queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
+
+
+                queue.ReadFromBuffer(clNbo, ref punktyINormalne, true, null);
+
+                //queue.ReleaseGLObjects(new[] { clNbo }, null);
+                queue.Finish();
+            }
+            return !kt;
         }
 
 
