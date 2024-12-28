@@ -102,3 +102,42 @@
             SwapBuffers();
         }
         */
+
+         unsafe void RunKernel(Punkt[] aa)
+        {
+            lock (_bufferLock)
+            {
+                queue.WriteToBuffer(aa, aaBuf, true, null);
+
+                kernel.SetMemoryArgument(0, aaBuf);
+                kernel.SetMemoryArgument(1, bbBuf);
+                kernel.SetValueArgument(2, dt);
+                kernel.SetValueArgument(3, w);
+                kernel.SetValueArgument(4, N_X);
+                kernel.SetValueArgument(5, N_Y);
+
+                //do wzbudzenia fal
+                kernel.SetValueArgument(6, (float)Math.Sin(czas));
+                kernel.SetValueArgument(7, czas);
+
+
+                kernelTrujkatow.SetMemoryArgument(0, bbBuf);
+                kernelTrujkatow.SetMemoryArgument(1, clNbo);
+                kernelTrujkatow.SetValueArgument(2, N_X);
+                kernelTrujkatow.SetValueArgument(3, N_Y);
+
+                GL.Finish();
+                //queue.AcquireGLObjects(new[] { clNbo }, null);
+
+                var globalWorkSize = new long[] { N_X, N_Y };
+
+                queue.Execute(kernel, null, globalWorkSize, null, null);
+                queue.Execute(kernelTrujkatow, null, globalWorkSize, null, null);
+
+
+                queue.ReadFromBuffer(clNbo, ref punktyINormalne, true, null);
+
+                //queue.ReleaseGLObjects(new[] { clNbo }, null);
+                queue.Finish();
+            }
+        }

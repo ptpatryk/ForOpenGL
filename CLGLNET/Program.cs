@@ -8,6 +8,9 @@ using static OpenTK.Graphics.OpenGL.GL;
 using OpenTK.Windowing.Desktop;
 using CLGLNET;
 
+
+
+
 class Program
 {
     //static int vbo, nbo;
