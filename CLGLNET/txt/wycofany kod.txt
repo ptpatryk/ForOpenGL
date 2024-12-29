@@ -141,3 +141,43 @@
                 queue.Finish();
             }
         }
+
+        unsafe void InitOpenCL()
+        {
+            var platform = ComputePlatform.Platforms[0];
+            var devices = platform.Devices;
+
+            clContext = new ComputeContext(devices, new ComputeContextPropertyList(platform), null, IntPtr.Zero);
+            queue = new ComputeCommandQueue(clContext, devices[0], ComputeCommandQueueFlags.None);
+
+            string kernelSource = File.ReadAllText("kernel.cl");
+            var program = new ComputeProgram(clContext, kernelSource);
+            program.Build(devices, null, null, IntPtr.Zero);
+            kernel = program.CreateKernel("obliczWspolrzedne");
+            kernelTrujkatow = program.CreateKernel("obliczNormalne");
+            kernelPrzygotujTrojkaty = program.CreateKernel("przygotujTrojkaty");
+
+            aaBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite | ComputeMemoryFlags.CopyHostPointer, new Punkt[N_X * N_Y]);
+            bbBuf = new ComputeBuffer<Punkt>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+            //clNbo = new ComputeBuffer<PunktNormal>(clContext, ComputeMemoryFlags.WriteOnly, N_X * N_Y);
+            clNbo = new ComputeBuffer<PunktNormal>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y);
+
+            //vertexBuffer = ComputeBuffer<float>.CreateFromGLBuffer<float>(clContext, ComputeMemoryFlags.ReadWrite, 1);// nbo);
+            vertexBuffer = new ComputeBuffer<float>(clContext, ComputeMemoryFlags.ReadWrite, N_X * N_Y*4*18);
+
+
+
+            queue.WriteToBuffer(aa, aaBuf, true, null);
+        }
+
+        void UpdateSinglePoint(int index, Punkt newValue)
+        {
+            //queue.WriteToBuffer(new Punkt[] { newValue }, aaBuf, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), 0, 1, null);
+            // Update the value in the local array
+            //punktyINormalne[index].x = newValue.x;
+            //punktyINormalne[index].y = newValue.y;
+            //punktyINormalne[index].z = 5;
+
+            // Write the updated value to the OpenCL buffer
+            //queue.WriteToBuffer(new Punkt[] { newValue }, aaBuf, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), null);
+        }
