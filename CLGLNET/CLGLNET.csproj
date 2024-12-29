@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cloo.clSharp" Version="1.0.1" />
     <PackageReference Include="OpenTK" Version="4.9.3" />
   </ItemGroup>
 
