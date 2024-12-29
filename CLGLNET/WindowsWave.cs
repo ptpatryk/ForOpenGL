@@ -65,6 +65,10 @@ namespace CLGLNET
         private int _vertexArrayObject;
         private int _shaderProgram;
 
+
+        CLResultCode res;
+        CLEvent clEvent;
+
         public WindowsWave(int width, int height, string title)
             : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
         {
@@ -264,37 +268,56 @@ namespace CLGLNET
         unsafe void InitOpenCL()
         {
             // Platforma i urządzenie
-            var platforms = CL.GetPlatformIds(out CLPlatform[] platformIds);
-            var platform = platformIds[0];
-            var devices = CL.GetDeviceIds(platform, DeviceType.Gpu, out CLDevice[] deviceIds);
+            res = CL.GetPlatformIds(out CLPlatform[] platformIds);
+           
+            res = CL.GetDeviceIds(platformIds[0], DeviceType.Gpu, out CLDevice[] deviceIds);
+            CheckResult(res);
             var device = deviceIds[0];
 
             // Kontekst i kolejka
-            context = CL.CreateContext(IntPtr.Zero, 1, new[] { device }, IntPtr.Zero, IntPtr.Zero, out _);
+            context = CL.CreateContext(IntPtr.Zero, 1, new[] { device }, IntPtr.Zero, IntPtr.Zero, out res);
+            CheckResult(res);
             // Replace the line causing the error with the following line
-            queue = CL.CreateCommandQueueWithProperties(context, device, IntPtr.Zero, out _);
+            queue = CL.CreateCommandQueueWithProperties(context, device, IntPtr.Zero, out res);
+            CheckResult(res);
 
             // Program i kernel
             string programSource = File.ReadAllText("kernel.cl");
-            var program = CL.CreateProgramWithSource(context, programSource, out _);
-            CL.BuildProgram(program, 1, new[] { device }, string.Empty, IntPtr.Zero, IntPtr.Zero);
-            kernel = CL.CreateKernel(program, "obliczWspolrzedne", out _);
-            kernelTrujkatow = CL.CreateKernel(program, "obliczNormalne", out _);
-            kernelPrzygotujTrojkaty = CL.CreateKernel(program, "przygotujTrojkaty", out _);
+            var program = CL.CreateProgramWithSource(context, programSource, out res);
+            CheckResult(res);
+
+            res = CL.BuildProgram(program, 1, new[] { device }, string.Empty, IntPtr.Zero, IntPtr.Zero);
+            CheckResult(res);
+
+
+            kernel = CL.CreateKernel(program, "obliczWspolrzedne", out res);
+            CheckResult(res);
+
+            kernelTrujkatow = CL.CreateKernel(program, "obliczNormalne", out res);
+            CheckResult(res);
+
+            kernelPrzygotujTrojkaty = CL.CreateKernel(program, "przygotujTrojkaty", out res);
+            CheckResult(res);
 
             // Dane wejściowe
-            Punkt[] a = aa;//new Punkt[N_X * N_Y];
+            Punkt[] a = new Punkt[N_X * N_Y];
             Punkt[] b = new Punkt[N_X * N_Y];
             PunktNormal[] c = new PunktNormal[N_X * N_Y];
             float[] d = new float[N_X * N_Y * 18 * 4];
 
             // Bufory
-            aaBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, a, out _);
-            //aaBuf = CL.CreateBuffer(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, (uint)(a.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(a, GCHandleType.Pinned).AddrOfPinnedObject(), out _);
-            bbBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite, b, out _);
-            clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite, c, out _);
+            aaBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, aa, out res);
+            CheckResult(res);
 
-            vertexBuffer = CL.CreateBuffer<float>(context, MemoryFlags.ReadWrite, d, out _);
+            //aaBuf = CL.CreateBuffer(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, (uint)(a.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(a, GCHandleType.Pinned).AddrOfPinnedObject(), out _);
+            bbBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, b, out res);
+            CheckResult(res);
+
+            clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, c, out res);
+            CheckResult(res);
+
+            vertexBuffer = CL.CreateBuffer<float>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, d, out res);
+            CheckResult(res);
         }
 
 
@@ -370,7 +393,7 @@ namespace CLGLNET
                 CL.SetKernelArg(kernelPrzygotujTrojkaty, 2, N_X);
                 CL.SetKernelArg(kernelPrzygotujTrojkaty, 3, N_Y);
 
-                var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
+                
 
                 GL.Finish();
 
@@ -390,10 +413,12 @@ namespace CLGLNET
 
 
                 // Uruchomienie kernela
-                CL.EnqueueNDRangeKernel(queue, kernel, 1, null, globalWorkSize, null, 0, null, out _);
-                CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, 1, null, globalWorkSize, null, 0, null, out _);
+                var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
+                uint liczbaWymiarow = 2;
+                CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
 
-                CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, 1, null, globalWorkSize, null, 0, null, out _);
+                CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
 
 
 
@@ -445,6 +470,13 @@ namespace CLGLNET
         /////////////////////////////////////////////////////////////////////////////////////////////
         ///
 
-
+        private static void CheckResult(CLResultCode res)
+        {
+            if (res != CLResultCode.Success)
+            {
+                //ViewError(res.ToString(), res.ToString());
+                throw new Exception("Error");
+            }
+        }
     }
 }
