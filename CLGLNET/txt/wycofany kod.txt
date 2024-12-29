@@ -235,3 +235,29 @@
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), vertices, 0, null, out _);
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, vertices.Length * sizeof(float), vertices, 0, null, out _);
 
+ //async Task Akcja()
+        //{
+        //    bool kt = false;
+        //    while (true)
+        //    {
+        //        lock (_syncLock)
+        //        {
+        //            kt = RunKernel(kt, czas);
+        //            czas += dt;
+
+        //        }
+        //        Thread.Sleep(1000);
+        //        //await Task.Delay(1000);
+        //    }
+        //}
+        
+                //var punktyINormalne = new PunktNormal[N_X * N_Y];
+                //var punkty = new Punkt[N_X * N_Y];  
+
+                // Odczyt danych z bufora
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), (nint)GCHandle.Alloc(vertices, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
+                            
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, punkty, 0, null, out clEvent);
+                //CL.EnqueueReadBuffer(queue, clNbo, true, (nuint)0, (nuint)(punktyINormalne.Length * sizeof(PunktNormal)), (nint)GCHandle.Alloc(punktyINormalne, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, b1, true, (nuint)0, (nuint)(punkty.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(punkty, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
+

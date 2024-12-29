@@ -1,34 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using OpenTK;
-//using OpenTK.Graphics.OpenGL4;
-using OpenTK.Graphics.GL;
-
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
-
-using System;
-using System.IO;
+﻿using OpenTK.Graphics.OpenGL;
 using System.Runtime.InteropServices;
-using static OpenTK.Graphics.OpenGL.GL;
-//using OpenTK.Windowing.Desktop;
 using OpenTK.Compute.OpenCL;
-using System;
-using System.IO;
 using OpenTK.Windowing.Common;
 using OpenTK.Mathematics;
-using System.Threading.Tasks.Dataflow;
-using OpenTK.Graphics.Wgl;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-//using OpenGLTetris.Blocks;
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using OpenTK.Windowing.Desktop;
 
 namespace CLGLNET
@@ -47,8 +21,7 @@ namespace CLGLNET
 
     public class WindowsWave : GameWindow
     {
-        int vbo, nbo;
-        //ComputeContext clContext;
+        int nbo;
         CLCommandQueue queue;
         CLKernel kernel;
         CLKernel kernelTrujkatow;
@@ -63,13 +36,13 @@ namespace CLGLNET
         int N_Y = 100;
         float dt = 0.01f;
         float w = -2.0f;
-        PunktNormal[] punktyINormalne;
+        //PunktNormal[] punktyINormalne;
         Punkt[] aa;
+        float[] vertices;
 
         private int _vertexBufferObject;
         private int _vertexArrayObject;
         private int _shaderProgram;
-
 
         CLResultCode res;
         CLEvent clEvent;
@@ -77,8 +50,6 @@ namespace CLGLNET
         public WindowsWave(int width, int height, string title)
             : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
         {
-            punktyINormalne = new PunktNormal[N_X * N_Y];
-
             aa = new Punkt[N_X * N_Y];
 
             for (int i = 0; i < aa.Length; i++)
@@ -86,8 +57,9 @@ namespace CLGLNET
                 aa[i].m = 1.0f;
             }
 
-            //TargetUpdateFrequency = 60.0;
+            vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
 
+            //TargetUpdateFrequency = 60.0;
         }
 
         private int _vertexShader;
@@ -101,10 +73,6 @@ namespace CLGLNET
             InitOpenGL();
 
             InitOpenCL();
-          
-            RunKernel(true, czas);
-
-            //Akcja();
         }
 
         protected override void OnUnload()
@@ -127,23 +95,10 @@ namespace CLGLNET
 
         }
 
-  
-        private void Renderuj(float[] vertices)
+
+        private void Renderuj()
         {
-            lock (_bufferLock)
-            {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-                GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
-
-                GL.BindVertexArray(_vertexArrayObject);
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-                GL.EnableVertexAttribArray(0);
-
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
-                         
-                //GL.Flush();
-            }
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -184,14 +139,14 @@ namespace CLGLNET
             CheckGLError("SwapBuffers");
         }
 
-        unsafe void InitOpenGL()
+        void InitOpenGL()
         {
             #region tu mam problem miało być to do dzielenia zasobów między OpenCL i OpenGL
 
-            GL.GenBuffers(1, out nbo);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.GenBuffers(1, out nbo);
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+            ////GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             #endregion
 
@@ -232,11 +187,11 @@ namespace CLGLNET
 
         }
 
-        unsafe void InitOpenCL()
+        void InitOpenCL()
         {
             // Platforma i urządzenie
             res = CL.GetPlatformIds(out CLPlatform[] platformIds);
-           
+
             res = CL.GetDeviceIds(platformIds[0], DeviceType.Gpu, out CLDevice[] deviceIds);
             CheckResult(res);
             var device = deviceIds[0];
@@ -267,8 +222,7 @@ namespace CLGLNET
             CheckResult(res);
 
             // Dane wejściowe
-            Punkt[] a = new Punkt[N_X * N_Y];
-            Punkt[] b = new Punkt[N_X * N_Y];
+            Punkt[] b = new Punkt[N_X * N_Y];  //może w miejscu b dać aa
             PunktNormal[] c = new PunktNormal[N_X * N_Y];
             float[] d = new float[N_X * N_Y * 18 * 4];
 
@@ -287,40 +241,15 @@ namespace CLGLNET
             CheckResult(res);
         }
 
-
-        private readonly object _syncLock = new object();
-
-        //async Task Akcja()
-        //{
-        //    bool kt = false;
-        //    while (true)
-        //    {
-        //        lock (_syncLock)
-        //        {
-        //            kt = RunKernel(kt, czas);
-        //            czas += dt;
-
-        //        }
-        //        Thread.Sleep(1000);
-        //        //await Task.Delay(1000);
-        //    }
-        //}
-
-        bool kt2 = false;
-
+        bool kt2 = true;
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
-            lock (_syncLock)
-            {
-                kt2 = RunKernel(kt2, czas);
-                czas += dt;
-
-            }
-
+            kt2 = RunKernel(kt2);
+            Renderuj();
+            czas += dt;
         }
 
-
-        unsafe bool RunKernel(bool kt, float czas)
+        unsafe bool RunKernel(bool kt)
         {
             var b1 = kt ? aaBuf : bbBuf;
             var b2 = kt ? bbBuf : aaBuf;
@@ -349,8 +278,6 @@ namespace CLGLNET
                 CL.SetKernelArg(kernelPrzygotujTrojkaty, 2, N_X);
                 CL.SetKernelArg(kernelPrzygotujTrojkaty, 3, N_Y);
 
-                
-
                 //GL.Finish();
 
                 /*
@@ -361,7 +288,6 @@ namespace CLGLNET
                 queue.Finish();
                 */
                 //queue.AcquireGLObjects(new[] { vertexBuffer }, null);              
-
 
                 // Uruchomienie kernela
                 var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
@@ -375,22 +301,9 @@ namespace CLGLNET
                 res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
                 CheckResult(res);
 
-
-                // Zakładamy, że vertexBuffer jest już zainicjalizowany i wypełniony danymi
-                var vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
-                //var punktyINormalne = new PunktNormal[N_X * N_Y];
-                //var punkty = new Punkt[N_X * N_Y];  
-
-                // Odczyt danych z bufora
-                CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), (nint)GCHandle.Alloc(vertices, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
-                //CL.EnqueueReadBuffer(queue, clNbo, true, (nuint)0, (nuint)(punktyINormalne.Length * sizeof(PunktNormal)), (nint)GCHandle.Alloc(punktyINormalne, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
-                //CL.EnqueueReadBuffer(queue, b1, true, (nuint)0, (nuint)(punkty.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(punkty, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
-
-                // Teraz tablica vertices zawiera dane z bufora vertexBuffer
-                // Możesz je przetwarzać według potrzeb
-
+                CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
+ 
                 CL.Finish(queue);
-                Renderuj(vertices);
             }
             return !kt;
         }
