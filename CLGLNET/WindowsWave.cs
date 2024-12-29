@@ -15,7 +15,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using static OpenTK.Graphics.OpenGL.GL;
-using OpenTK.Windowing.Desktop;
+//using OpenTK.Windowing.Desktop;
 using OpenTK.Compute.OpenCL;
 using System;
 using System.IO;
@@ -24,7 +24,12 @@ using OpenTK.Mathematics;
 using System.Threading.Tasks.Dataflow;
 using OpenTK.Graphics.Wgl;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-
+//using OpenGLTetris.Blocks;
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
+using OpenTK.Windowing.Desktop;
 
 namespace CLGLNET
 {
@@ -81,6 +86,8 @@ namespace CLGLNET
                 aa[i].m = 1.0f;
             }
 
+            //TargetUpdateFrequency = 60.0;
+
         }
 
         private int _vertexShader;
@@ -94,45 +101,11 @@ namespace CLGLNET
             InitOpenGL();
 
             InitOpenCL();
-
-            // Przykładowe dane
-
-            // Uruchomienie kernela
+          
             RunKernel(true, czas);
-
-            //float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
-
-            ///PrzygotowanieBufora(vertices2);
 
             //Akcja();
         }
-
-        //void komb()
-        //{
-        //    // Tworzenie kontekstu OpenCL z kontekstem OpenGL
-        //    var properties = new ComputeContextPropertyList(ComputePlatform.Platforms[0]);
-        //    properties.Add(new ComputeContextProperty(ComputeContextPropertyName.CL_GL_CONTEXT_KHR, GL.GetCurrentContextHandle()));
-        //    properties.Add(new ComputeContextProperty(ComputeContextPropertyName.CL_WGL_HDC_KHR, Wgl.GetCurrentDC()));
-        //    var context = new ComputeContext(ComputeDeviceTypes.Gpu, properties, null, IntPtr.Zero);
-
-        //    // Tworzenie bufora OpenGL
-        //    int vbo;
-        //    GL.GenBuffers(1, out vbo);
-        //    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-        //    GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(data.Length * sizeof(float)), data, BufferUsageHint.DynamicDraw);
-
-        //    // Rejestrowanie bufora w OpenCL
-        //    IntPtr bufferHandle = CL10.CreateFromGLBuffer(context.Handle, ComputeMemoryFlags.ReadWrite, vbo, out ComputeErrorCode error);
-        //    ComputeBuffer<float> clBuffer = new ComputeBuffer<float>(bufferHandle, context, ComputeMemoryFlags.ReadWrite);
-
-        //    // Synchronizacja i użycie w OpenCL
-        //    GL.Finish();
-        //    var queue = new ComputeCommandQueue(context, context.Devices[0], ComputeCommandQueueFlags.None);
-        //    queue.AcquireGLObjects(new[] { clBuffer }, null);
-        //    // Operacje OpenCL na buforze
-        //    queue.ReleaseGLObjects(new[] { clBuffer }, null);
-        //    queue.Finish();
-        //}
 
         protected override void OnUnload()
         {
@@ -154,66 +127,41 @@ namespace CLGLNET
 
         }
 
-        private float[] PrzygotujTrojkaty(PunktNormal[] wieszcholki)
-        {
-            List<float> vertices = new List<float>();
-
-            for (int i = 0; i < N_Y - 1; i++)
-                for (int j = 0; j < N_X - 1; j++)
-                {
-                    AddVwrtex(vertices, wieszcholki, i, j);
-                    AddVwrtex(vertices, wieszcholki, i, j + 1);
-                    AddVwrtex(vertices, wieszcholki, i + 1, j);
-                }
-
-            return vertices.ToArray();
-        }
-
-        private void AddVwrtex(List<float> vertices, PunktNormal[] wieszcholki, int i, int j)
-        {
-            vertices.Add(wieszcholki[i * N_Y + j].x - 40f);
-            vertices.Add(wieszcholki[i * N_Y + j].y - 40f);
-            vertices.Add(wieszcholki[i * N_Y + j].z);
-            vertices.Add(wieszcholki[i * N_Y + j].nx);
-            vertices.Add(wieszcholki[i * N_Y + j].ny);
-            vertices.Add(wieszcholki[i * N_Y + j].nz);
-        }
-
-        private void PrzygotowanieBufora(float[] vertices)
+  
+        private void Renderuj(float[] vertices)
         {
             lock (_bufferLock)
             {
-                if (_vertexBufferObject == 0)
-                {
-                    _vertexBufferObject = GL.GenBuffer();
-                }
                 GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-
                 GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
 
-                if (_vertexArrayObject == 0)
-                {
-                    _vertexArrayObject = GL.GenVertexArray();
-                }
                 GL.BindVertexArray(_vertexArrayObject);
-
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
                 GL.EnableVertexAttribArray(0);
 
                 GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+                         
+                //GL.Flush();
             }
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            //base.OnRenderFrame(e);
+            base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            CheckGLError("GL.Clear");
+
 
             GL.UseProgram(_shaderProgram);
+            CheckGLError("GL.UseProgram");
+
             GL.BindVertexArray(_vertexArrayObject);
-            GL.LoadIdentity();
+            CheckGLError("GL.BindVertexArray");
+
+            //GL.LoadIdentity();
+            //CheckGLError("GL.LoadIdentity");
 
             // Rotate the image
             Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
@@ -222,14 +170,18 @@ namespace CLGLNET
 
             Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
+            CheckGLError("GL.UniformMatrix4 (projection)");
 
 
             int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
             GL.UniformMatrix4(location, false, ref rotationMatrix);
+            CheckGLError("GL.UniformMatrix4 (rotationMatrix)");
 
             GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
+            CheckGLError("GL.DrawArrays");
 
             SwapBuffers();
+            CheckGLError("SwapBuffers");
         }
 
         unsafe void InitOpenGL()
@@ -263,6 +215,21 @@ namespace CLGLNET
             GL.LinkProgram(_shaderProgram);
 
             #endregion
+
+            // Initialize vertex buffer object and vertex array object
+            _vertexBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+            _vertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(_vertexArrayObject);
+
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
         }
 
         unsafe void InitOpenCL()
@@ -321,47 +288,36 @@ namespace CLGLNET
         }
 
 
-
-
         private readonly object _syncLock = new object();
-
-        async Task Akcja()
-        {
-            bool kt = false;
-            while (true)
-            {
-                lock (_syncLock)
-                {
-                    kt = RunKernel(kt, czas);
-                    czas += dt;
-
-                    float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
-
-                    PrzygotowanieBufora(vertices2);
-                }
-
-                await Task.Delay(1000);
-            }
-        }
 
         //async Task Akcja()
         //{
         //    bool kt = false;
         //    while (true)
         //    {
-        //        kt = RunKernelUpdate(kt, czas);
-        //        czas += dt;
+        //        lock (_syncLock)
+        //        {
+        //            kt = RunKernel(kt, czas);
+        //            czas += dt;
 
-        //        float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
-
-        //        PrzygotowanieBufora(vertices2);
-
-        //        Thread.Sleep(300);
-
-
+        //        }
+        //        Thread.Sleep(1000);
+        //        //await Task.Delay(1000);
         //    }
-
         //}
+
+        bool kt2 = false;
+
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            lock (_syncLock)
+            {
+                kt2 = RunKernel(kt2, czas);
+                czas += dt;
+
+            }
+
+        }
 
 
         unsafe bool RunKernel(bool kt, float czas)
@@ -395,12 +351,7 @@ namespace CLGLNET
 
                 
 
-                GL.Finish();
-
-
-
-
-
+                //GL.Finish();
 
                 /*
                 var queue = new ComputeCommandQueue(context, context.Devices[0], ComputeCommandQueueFlags.None);
@@ -415,49 +366,34 @@ namespace CLGLNET
                 // Uruchomienie kernela
                 var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
                 uint liczbaWymiarow = 2;
-                CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
-                CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                CheckResult(res);
 
-                CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                res = CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                CheckResult(res);
 
+                res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                CheckResult(res);
 
 
                 // Zakładamy, że vertexBuffer jest już zainicjalizowany i wypełniony danymi
-                float[] vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
+                var vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
+                //var punktyINormalne = new PunktNormal[N_X * N_Y];
+                //var punkty = new Punkt[N_X * N_Y];  
 
                 // Odczyt danych z bufora
-                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, vertices, 0, null, out _);
-                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, (nuint)(vertices.Length * sizeof(float)), vertices, 0, null, out _);
-                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), vertices, 0, null, out _);
-                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, vertices.Length * sizeof(float), vertices, 0, null, out _);
-
                 CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), (nint)GCHandle.Alloc(vertices, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, clNbo, true, (nuint)0, (nuint)(punktyINormalne.Length * sizeof(PunktNormal)), (nint)GCHandle.Alloc(punktyINormalne, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, b1, true, (nuint)0, (nuint)(punkty.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(punkty, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
 
                 // Teraz tablica vertices zawiera dane z bufora vertexBuffer
                 // Możesz je przetwarzać według potrzeb
 
                 CL.Finish(queue);
-                PrzygotowanieBufora(vertices);
-
-
-
-
-
-
-                //punktyINormalne = new PunktNormal[N_X * N_Y];
-
-                //queue.ReadFromBuffer(clNbo, ref punktyINormalne, true, null);
-
-                //CL.EnqueueReadBuffer(queue, clNbo, true, IntPtr.Zero, (nuint)(punktyINormalne.Length * sizeof(PunktNormal)), punktyINormalne, 0, null, out _);
-
-                //queue.ReleaseGLObjects(new[] { vertexBuffer }, null);
-
-
+                Renderuj(vertices);
             }
             return !kt;
         }
-
-
 
         private void CheckGLError(string location)
         {
@@ -467,8 +403,6 @@ namespace CLGLNET
                 throw new Exception($"OpenGL error at {location}: {error}");
             }
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////
-        ///
 
         private static void CheckResult(CLResultCode res)
         {

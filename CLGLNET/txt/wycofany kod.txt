@@ -181,3 +181,57 @@
             // Write the updated value to the OpenCL buffer
             //queue.WriteToBuffer(new Punkt[] { newValue }, aaBuf, true, new IntPtr(index * Marshal.SizeOf(typeof(Punkt))), null);
         }
+
+                //async Task Akcja()
+        //{
+        //    bool kt = false;
+        //    while (true)
+        //    {
+        //        kt = RunKernelUpdate(kt, czas);
+        //        czas += dt;
+
+        //        float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
+
+        //        PrzygotowanieBufora(vertices2);
+
+        //        Thread.Sleep(300);
+
+
+        //    }
+
+        //}
+
+
+                            //float[] vertices2 = PrzygotujTrojkaty(punktyINormalne);
+
+                    //PrzygotowanieBufora(vertices2);
+      private float[] PrzygotujTrojkaty(PunktNormal[] wieszcholki)
+        {
+            List<float> vertices = new List<float>();
+
+            for (int i = 0; i < N_Y - 1; i++)
+                for (int j = 0; j < N_X - 1; j++)
+                {
+                    AddVwrtex(vertices, wieszcholki, i, j);
+                    AddVwrtex(vertices, wieszcholki, i, j + 1);
+                    AddVwrtex(vertices, wieszcholki, i + 1, j);
+                }
+
+            return vertices.ToArray();
+        }
+
+        private void AddVwrtex(List<float> vertices, PunktNormal[] wieszcholki, int i, int j)
+        {
+            vertices.Add(wieszcholki[i * N_Y + j].x - 40f);
+            vertices.Add(wieszcholki[i * N_Y + j].y - 40f);
+            vertices.Add(wieszcholki[i * N_Y + j].z);
+            vertices.Add(wieszcholki[i * N_Y + j].nx);
+            vertices.Add(wieszcholki[i * N_Y + j].ny);
+            vertices.Add(wieszcholki[i * N_Y + j].nz);
+        }
+
+                        //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, vertices, 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, (nuint)(vertices.Length * sizeof(float)), vertices, 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, (nuint)0, (nuint)(vertices.Length * sizeof(float)), vertices, 0, null, out _);
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, IntPtr.Zero, vertices.Length * sizeof(float), vertices, 0, null, out _);
+

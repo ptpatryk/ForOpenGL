@@ -19,6 +19,7 @@ __kernel void obliczWspolrzedne(__global Punkt* aa, __global Punkt* bb, float dt
         
         bb[i * N_Y + j].v = aa[i * N_Y + j].v + F / aa[i * N_Y + j].m * dt;      
         bb[i * N_Y + j].x = aa[i * N_Y + j].x + bb[i * N_Y + j].v * dt;
+        bb[i * N_Y + j].m = aa[i * N_Y + j].m;
     }
 
     if (czas < 12.56 && i==50 && j==50) {
