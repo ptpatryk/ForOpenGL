@@ -331,7 +331,8 @@ namespace CLGLNET
                 //queue.AcquireGLObjects(new[] { vertexBuffer }, null);              
 
                 // Akwizycja bufora współdzielonego
-                res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
+                //res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
+                res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
                 CheckResult(res);
 
 
@@ -349,7 +350,7 @@ namespace CLGLNET
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
 
-                res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
+                res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
                 CheckResult(res);
 
 
@@ -357,7 +358,7 @@ namespace CLGLNET
             }
             return !kt;
         }
-        private CLResultCode EnqueueAcquireGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[] eventWaitList, out CLEvent @event)
+        private CLResultCode EnqueueAcquireGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[]? eventWaitList, out CLEvent @event)
         {
             IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
             for (int i = 0; i < memObjects.Length; i++)
@@ -365,7 +366,8 @@ namespace CLGLNET
                 memObjectHandles[i] = memObjects[i].Handle;
             }
 
-            IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            //IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            IntPtr[] eventWaitListHandles = null;
             if (eventWaitList != null)
             {
                 eventWaitListHandles = new IntPtr[eventWaitList.Length];
@@ -381,7 +383,7 @@ namespace CLGLNET
             return result;
         }
 
-        private CLResultCode EnqueueReleaseGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[] eventWaitList, out CLEvent @event)
+        private CLResultCode EnqueueReleaseGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[]? eventWaitList, out CLEvent @event)
         {
             IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
             for (int i = 0; i < memObjects.Length; i++)
@@ -389,7 +391,8 @@ namespace CLGLNET
                 memObjectHandles[i] = memObjects[i].Handle;
             }
 
-            IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            //IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            IntPtr[] eventWaitListHandles = null;
             if (eventWaitList != null)
             {
                 eventWaitListHandles = new IntPtr[eventWaitList.Length];
