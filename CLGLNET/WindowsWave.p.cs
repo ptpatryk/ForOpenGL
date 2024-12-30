@@ -29,6 +29,10 @@ namespace CLGLNET
             {
                 throw new Exception($"OpenGL error at {location}: {error}");
             }
+            else
+            {
+                Console.WriteLine($"{location}: OK");
+            }   
         }
 
         private static void CheckResult(CLResultCode res)
@@ -38,6 +42,10 @@ namespace CLGLNET
                 //ViewError(res.ToString(), res.ToString());
                 Console.WriteLine($"OpenCL Error: {res}");
                 throw new Exception("Error");
+            }
+            else
+            {
+                Console.WriteLine($"{res}");
             }
         }
         private string GetPlatformInfo(CLPlatform platform, uint paramName)

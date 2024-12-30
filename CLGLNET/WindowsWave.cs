@@ -179,6 +179,7 @@ namespace CLGLNET
 
             // Utwórz bufor współdzielony między OpenCL i OpenGL
             GL.GenBuffers(1, out nbo);
+            CheckGLError("Tworzenie Bufora");
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
             GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
@@ -190,7 +191,7 @@ namespace CLGLNET
 
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-
+            CheckGLError("Ostatnia linia");
         }
 
 
@@ -210,12 +211,13 @@ namespace CLGLNET
 
             WyswietlPlatformy(platformIds);
 
+            CLPlatform myPlatform = platformIds[0];
 
-            res = CL.GetDeviceIds(platformIds[1], OpenTK.Compute.OpenCL.DeviceType.Gpu, out CLDevice[] deviceIds);
+            res = CL.GetDeviceIds(myPlatform, OpenTK.Compute.OpenCL.DeviceType.Gpu, out CLDevice[] deviceIds);
             CheckResult(res);
             var device = deviceIds[0];
 
-            IntPtr platform = platformIds[1].Handle;
+            IntPtr platform = myPlatform.Handle;
             IntPtr[] properties = new[] {
                    (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
                    (IntPtr)0x200A, glDC,   // WGL_HDC_KHR
