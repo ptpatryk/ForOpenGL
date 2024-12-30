@@ -214,14 +214,14 @@ namespace CLGLNET
 
             IntPtr platform = myPlatform.Handle;
             IntPtr[] properties = new[] {
+                   (IntPtr)0x1084, platform,
                    (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
                    (IntPtr)0x200A, glDC,   // WGL_HDC_KHR
-                   (IntPtr)0x1084, platform//,
-                   ,IntPtr.Zero
+                   IntPtr.Zero
                 };
 
             // Kontekst i kolejka
-            context = CL.CreateContext(properties, (uint)deviceIds.Length, deviceIds, IntPtr.Zero, IntPtr.Zero, out res);
+            context = CL.CreateContext(properties, deviceIds, IntPtr.Zero, IntPtr.Zero, out res);
             CheckResult(res);
 
             // Replace the line causing the error with the following line
@@ -277,7 +277,7 @@ namespace CLGLNET
                 Console.WriteLine($"Error creating buffer from GL buffer: {resultCode}");
                 // Możesz dodać dodatkowe logowanie lub obsługę błędów tutaj
             }
-
+            
             return new CLBuffer(clBufferPtr);
         }
 
