@@ -1,0 +1,126 @@
+﻿ private bool IsDeviceCompatibleWithGLContext(CLDevice device)
+        {
+            // Pobierz informacje o urządzeniu
+            CL.GetDeviceInfo(device, DeviceInfo.Vendor, out byte[] vendorBytes);
+            string vendor = System.Text.Encoding.ASCII.GetString(vendorBytes).TrimEnd('\0');
+
+            // Pobierz informacje o kontekście OpenGL
+            string glVendor = GL.GetString(StringName.Vendor);
+
+            // Sprawdź, czy vendor OpenCL i OpenGL są zgodne
+            if (!vendor.Contains(glVendor))
+            {
+                return false;
+            }
+
+            // Sprawdź, czy urządzenie obsługuje rozszerzenie cl_khr_gl_sharing
+            CL.GetDeviceInfo(device, DeviceInfo.Extensions, out byte[] extensionsBytes);
+            string extensions = System.Text.Encoding.ASCII.GetString(extensionsBytes).TrimEnd('\0');
+            if (!extensions.Contains("cl_khr_gl_sharing"))
+            {
+                return false;
+            }
+
+            // Sprawdź, czy urządzenie obsługuje odpowiednią wersję OpenGL
+            // Note: OpenCL does not provide a direct way to query OpenGL version from a device.
+            // Instead, we can check the OpenCL version and assume compatibility based on that.
+            CL.GetDeviceInfo(device, DeviceInfo.Version, out byte[] clVersionBytes);
+            string clVersion = System.Text.Encoding.ASCII.GetString(clVersionBytes).TrimEnd('\0');
+            string requiredCLVersion = "OpenCL 2.0"; // Przykładowa wymagana wersja OpenCL
+            if (string.Compare(clVersion, requiredCLVersion) < 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+
+        unsafe void InitOpenCL_kont()
+        {
+            // Pobierz aktualny kontekst OpenGL
+            IntPtr glContext = wglGetCurrentContext();
+            IntPtr glDC = wglGetCurrentDC();
+
+            // Utwórz właściwości kontekstu OpenCL
+            res = CL.GetPlatformIds(out CLPlatform[] platformIds);
+
+            CLPlatform? selectedPlatform = null;
+            CLDevice? selectedDevice = null;
+
+            foreach (var platformT in platformIds)
+            {
+                res = CL.GetDeviceIds(platformT, OpenTK.Compute.OpenCL.DeviceType.Gpu, out CLDevice[] deviceIds);
+                if (res == CLResultCode.Success)
+                {
+                    foreach (var device in deviceIds)
+                    {
+                        // Check if the device matches the OpenGL context
+                        if (IsDeviceCompatibleWithGLContext(device))
+                        {
+                            selectedPlatform = platformT;
+                            selectedDevice = device;
+                            break;
+                        }
+                    }
+                }
+                if (selectedPlatform != null)
+                {
+                    break;
+                }
+            }
+
+            if (selectedPlatform == null || selectedDevice == null)
+            {
+                throw new Exception("No compatible OpenCL platform/device found for the current OpenGL context.");
+            }
+
+            IntPtr platform = selectedPlatform?.Handle ?? IntPtr.Zero;
+            IntPtr[] properties = new[] {
+        (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
+        (IntPtr)0x200A, glDC,   // WGL_HDC_KHR
+        (IntPtr)0x1084, platform
+    };
+
+            // Kontekst i kolejka
+            context = CL.CreateContext(properties, 1, new CLDevice[] { selectedDevice.Value }, IntPtr.Zero, IntPtr.Zero, out res);
+            CheckResult(res);
+
+            queue = CL.CreateCommandQueueWithProperties(context, selectedDevice.Value.Handle, IntPtr.Zero, out res);
+            CheckResult(res);
+
+            // Program i kernel
+            string programSource = File.ReadAllText("kernel.cl");
+            var program = CL.CreateProgramWithSource(context, programSource, out res);
+            CheckResult(res);
+
+            res = CL.BuildProgram(program, 1, new CLDevice[] { selectedDevice.Value }, string.Empty, IntPtr.Zero, IntPtr.Zero);
+            CheckResult(res);
+
+            kernel = CL.CreateKernel(program, "obliczWspolrzedne", out res);
+            CheckResult(res);
+
+            kernelTrujkatow = CL.CreateKernel(program, "obliczNormalne", out res);
+            CheckResult(res);
+
+            kernelPrzygotujTrojkaty = CL.CreateKernel(program, "przygotujTrojkaty", out res);
+            CheckResult(res);
+
+            // Dane wejściowe
+            Punkt[] b = new Punkt[N_X * N_Y];
+            PunktNormal[] c = new PunktNormal[N_X * N_Y];
+            float[] d = new float[N_X * N_Y * 18 * 4];
+
+            // Bufory
+            aaBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, aa, out res);
+            CheckResult(res);
+
+            bbBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, b, out res);
+            CheckResult(res);
+
+            clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, c, out res);
+            CheckResult(res);
+
+            vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
+            CheckResult(res);
+        }

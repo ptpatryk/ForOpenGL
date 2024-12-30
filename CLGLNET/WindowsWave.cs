@@ -4,6 +4,9 @@ using OpenTK.Compute.OpenCL;
 using OpenTK.Windowing.Common;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
+//using OpenCL.Net;
+using OpenTK.Graphics.Wgl;
+using ErrorCode = OpenTK.Graphics.OpenGL.ErrorCode;
 
 namespace CLGLNET
 {
@@ -19,8 +22,17 @@ namespace CLGLNET
         public float x, y, z, nx, ny, nz;
     }
 
-    public class WindowsWave : GameWindow
+    public partial class WindowsWave : GameWindow
     {
+        [DllImport("opengl32.dll")]
+        private static extern IntPtr wglGetCurrentContext();
+
+        [DllImport("opengl32.dll")]
+        private static extern IntPtr wglGetCurrentDC();
+
+        [DllImport("OpenCL.dll", EntryPoint = "clCreateFromGLBuffer")]
+        private static extern IntPtr clCreateFromGLBuffer(IntPtr context, ulong flags, uint bufobj, out int errcode_ret);
+
         int nbo;
         CLCommandQueue queue;
         CLKernel kernel;
@@ -92,13 +104,11 @@ namespace CLGLNET
             CL.ReleaseMemoryObject(clNbo);
             CL.ReleaseCommandQueue(queue);
             CL.ReleaseContext(context);
-
         }
-
 
         private void Renderuj()
         {
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -141,15 +151,6 @@ namespace CLGLNET
 
         void InitOpenGL()
         {
-            #region tu mam problem miało być to do dzielenia zasobów między OpenCL i OpenGL
-
-            //GL.GenBuffers(1, out nbo);
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            ////GL.BufferData(BufferTarget.ArrayBuffer, sizeof(PunktNormal) * N_X * N_Y, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-
-            #endregion
-
             #region przygotawanie schaderów
 
             string vertexShaderSource = File.ReadAllText("vertex_shader.glsl");
@@ -171,9 +172,14 @@ namespace CLGLNET
 
             #endregion
 
-            // Initialize vertex buffer object and vertex array object
-            _vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+            //// Initialize vertex buffer object and vertex array object
+            //_vertexBufferObject = GL.GenBuffer();
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+            // Utwórz bufor współdzielony między OpenCL i OpenGL
+            GL.GenBuffers(1, out nbo);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
             GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             _vertexArrayObject = GL.GenVertexArray();
@@ -186,19 +192,51 @@ namespace CLGLNET
             GL.EnableVertexAttribArray(1);
 
         }
+     
 
-        void InitOpenCL()
+        unsafe void InitOpenCL()
         {
+            // Pobierz aktualny kontekst OpenGL
+            IntPtr glContext = wglGetCurrentContext();
+            IntPtr glDC = wglGetCurrentDC();
+            
+            // Utwórz właściwości kontekstu OpenCL
+            //(IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
+            //(IntPtr)0x200A, glDC, // WGL_HDC_KHR
+            //IntPtr platform = IntPtr.Zero; // Add this line to define the platform variable
+            //4228u
             // Platforma i urządzenie
             res = CL.GetPlatformIds(out CLPlatform[] platformIds);
 
-            res = CL.GetDeviceIds(platformIds[0], DeviceType.Gpu, out CLDevice[] deviceIds);
+            WyswietlPlatformy(platformIds);
+
+
+            res = CL.GetDeviceIds(platformIds[1], OpenTK.Compute.OpenCL.DeviceType.Gpu, out CLDevice[] deviceIds);
             CheckResult(res);
             var device = deviceIds[0];
 
+
+            IntPtr platform = platformIds[1].Handle;
+            IntPtr[] properties = new[] {
+                   (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
+                   (IntPtr)0x200A, glDC,   // WGL_HDC_KHR
+                   (IntPtr)0x1084, platform//,
+                   //,IntPtr.Zero
+                };
+
+
             // Kontekst i kolejka
-            context = CL.CreateContext(IntPtr.Zero, 1, new[] { device }, IntPtr.Zero, IntPtr.Zero, out res);
-            CheckResult(res);
+            context = CL.CreateContext(properties, (uint)deviceIds.Length, deviceIds, IntPtr.Zero, IntPtr.Zero, out res);
+            if (res != CLResultCode.Success)
+            {
+                Console.WriteLine($"OpenCL Error: {res}");
+                throw new Exception($"Error: {res}");
+            }
+
+            //CheckResult(res);
+
+
+
             // Replace the line causing the error with the following line
             queue = CL.CreateCommandQueueWithProperties(context, device, IntPtr.Zero, out res);
             CheckResult(res);
@@ -237,11 +275,28 @@ namespace CLGLNET
             clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, c, out res);
             CheckResult(res);
 
-            vertexBuffer = CL.CreateBuffer<float>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, d, out res);
+            //vertexBuffer = CL.CreateBuffer<float>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, d, out res);
+            //CheckResult(res);
+            // Utwórz bufor współdzielony między OpenCL i OpenGL
+            vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
             CheckResult(res);
         }
 
+        private unsafe static CLBuffer CreateFromGLBuffer(CLContext context, MemoryFlags flags, int buffer, out CLResultCode resultCode)
+        {
+            IntPtr clBufferPtr = clCreateFromGLBuffer(context.Handle, (ulong)flags, (uint)buffer, out int errcode);
+            resultCode = (CLResultCode)errcode;
+
+            if (resultCode != CLResultCode.Success)
+            {
+                throw new Exception($"Error creating CL buffer from GL buffer: {resultCode}");
+            }
+
+            return new CLBuffer(clBufferPtr);
+        }
+
         bool kt2 = true;
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             kt2 = RunKernel(kt2);
@@ -289,6 +344,11 @@ namespace CLGLNET
                 */
                 //queue.AcquireGLObjects(new[] { vertexBuffer }, null);              
 
+                // Akwizycja bufora współdzielonego
+                //res = CL.EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
+                //CheckResult(res);
+
+
                 // Uruchomienie kernela
                 var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
                 uint liczbaWymiarow = 2;
@@ -302,28 +362,11 @@ namespace CLGLNET
                 CheckResult(res);
 
                 CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
- 
+
                 CL.Finish(queue);
             }
             return !kt;
         }
 
-        private void CheckGLError(string location)
-        {
-            ErrorCode error = GL.GetError();
-            if (error != ErrorCode.NoError)
-            {
-                throw new Exception($"OpenGL error at {location}: {error}");
-            }
-        }
-
-        private static void CheckResult(CLResultCode res)
-        {
-            if (res != CLResultCode.Success)
-            {
-                //ViewError(res.ToString(), res.ToString());
-                throw new Exception("Error");
-            }
-        }
     }
 }
