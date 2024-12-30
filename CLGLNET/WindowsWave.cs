@@ -4,9 +4,6 @@ using OpenTK.Compute.OpenCL;
 using OpenTK.Windowing.Common;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
-//using OpenCL.Net;
-using OpenTK.Graphics.Wgl;
-using ErrorCode = OpenTK.Graphics.OpenGL.ErrorCode;
 
 namespace CLGLNET
 {
@@ -24,15 +21,6 @@ namespace CLGLNET
 
     public partial class WindowsWave : GameWindow
     {
-        [DllImport("opengl32.dll")]
-        private static extern IntPtr wglGetCurrentContext();
-
-        [DllImport("opengl32.dll")]
-        private static extern IntPtr wglGetCurrentDC();
-
-        [DllImport("OpenCL.dll", EntryPoint = "clCreateFromGLBuffer")]
-        private static extern IntPtr clCreateFromGLBuffer(IntPtr context, ulong flags, uint bufobj, out int errcode_ret);
-
         int nbo;
         CLCommandQueue queue;
         CLKernel kernel;
@@ -118,7 +106,6 @@ namespace CLGLNET
             GL.Clear(ClearBufferMask.ColorBufferBit);
             //CheckGLError("GL.Clear");
 
-
             GL.UseProgram(_shaderProgram);
             //CheckGLError("GL.UseProgram");
 
@@ -136,7 +123,6 @@ namespace CLGLNET
             Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
             //CheckGLError("GL.UniformMatrix4 (projection)");
-
 
             int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
             GL.UniformMatrix4(location, false, ref rotationMatrix);
@@ -172,11 +158,6 @@ namespace CLGLNET
 
             #endregion
 
-            //// Initialize vertex buffer object and vertex array object
-            //_vertexBufferObject = GL.GenBuffer();
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-
             // Utwórz bufor współdzielony między OpenCL i OpenGL
             GL.GenBuffers(1, out nbo);
             CheckGLError("Tworzenie Bufora");
@@ -193,7 +174,6 @@ namespace CLGLNET
             GL.EnableVertexAttribArray(1);
             CheckGLError("Ostatnia linia");
         }
-
 
         unsafe void InitOpenCL()
         {
@@ -267,20 +247,6 @@ namespace CLGLNET
             CheckResult(res);
         }
 
-        private unsafe static CLBuffer CreateFromGLBuffer(CLContext context, MemoryFlags flags, int buffer, out CLResultCode resultCode)
-        {
-            IntPtr clBufferPtr = clCreateFromGLBuffer(context.Handle, (ulong)flags, (uint)buffer, out int errcode);
-            resultCode = (CLResultCode)errcode;
-
-            if (resultCode != CLResultCode.Success)
-            {
-                Console.WriteLine($"Error creating buffer from GL buffer: {resultCode}");
-                // Możesz dodać dodatkowe logowanie lub obsługę błędów tutaj
-            }
-            
-            return new CLBuffer(clBufferPtr);
-        }
-
         bool kt2 = true;
 
         protected override void OnUpdateFrame(FrameEventArgs e)
@@ -321,20 +287,9 @@ namespace CLGLNET
 
                 //GL.Finish();
 
-                /*
-                var queue = new ComputeCommandQueue(context, context.Devices[0], ComputeCommandQueueFlags.None);
-                queue.AcquireGLObjects(new[] { clBuffer }, null);
-                // Operacje OpenCL na buforze
-                queue.ReleaseGLObjects(new[] { clBuffer }, null);
-                queue.Finish();
-                */
-                //queue.AcquireGLObjects(new[] { vertexBuffer }, null);              
-
                 // Akwizycja bufora współdzielonego
-                //res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
                 res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
                 //CheckResult(res);
-
 
                 // Uruchomienie kernela
                 var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
@@ -353,68 +308,10 @@ namespace CLGLNET
                 res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
                 //CheckResult(res);
 
-
                 CL.Finish(queue);
             }
             return !kt;
         }
-        private CLResultCode EnqueueAcquireGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[]? eventWaitList, out CLEvent @event)
-        {
-            IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
-            for (int i = 0; i < memObjects.Length; i++)
-            {
-                memObjectHandles[i] = memObjects[i].Handle;
-            }
-
-            //IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
-            IntPtr[] eventWaitListHandles = null;
-            if (eventWaitList != null)
-            {
-                eventWaitListHandles = new IntPtr[eventWaitList.Length];
-                for (int i = 0; i < eventWaitList.Length; i++)
-                {
-                    eventWaitListHandles[i] = eventWaitList[i].Handle;
-                }
-            }
-
-            IntPtr eventHandle;
-            CLResultCode result = (CLResultCode)clEnqueueAcquireGLObjects(queue.Handle, numObjects, memObjectHandles, numEventsInWaitList, eventWaitListHandles, out eventHandle);
-            @event = new CLEvent(eventHandle);
-            return result;
-        }
-
-        private CLResultCode EnqueueReleaseGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[]? eventWaitList, out CLEvent @event)
-        {
-            IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
-            for (int i = 0; i < memObjects.Length; i++)
-            {
-                memObjectHandles[i] = memObjects[i].Handle;
-            }
-
-            //IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
-            IntPtr[] eventWaitListHandles = null;
-            if (eventWaitList != null)
-            {
-                eventWaitListHandles = new IntPtr[eventWaitList.Length];
-                for (int i = 0; i < eventWaitList.Length; i++)
-                {
-                    eventWaitListHandles[i] = eventWaitList[i].Handle;
-                }
-            }
-
-            IntPtr eventHandle;
-            CLResultCode result = (CLResultCode)clEnqueueReleaseGLObjects(queue.Handle, numObjects, memObjectHandles, numEventsInWaitList, eventWaitListHandles, out eventHandle);
-            @event = new CLEvent(eventHandle);
-            return result;
-        }
-
-        [DllImport("OpenCL.dll", EntryPoint = "clEnqueueReleaseGLObjects")]
-        private static extern int clEnqueueReleaseGLObjects(IntPtr commandQueue, uint numObjects, IntPtr[] memObjects, uint numEventsInWaitList, IntPtr[] eventWaitList, out IntPtr @event);
-
-
-        [DllImport("OpenCL.dll", EntryPoint = "clEnqueueAcquireGLObjects")]
-        private static extern int clEnqueueAcquireGLObjects(IntPtr commandQueue, uint numObjects, IntPtr[] memObjects, uint numEventsInWaitList, IntPtr[] eventWaitList, out IntPtr @event);
-
 
     }
 }
