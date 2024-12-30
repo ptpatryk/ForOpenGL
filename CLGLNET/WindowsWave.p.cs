@@ -36,6 +36,7 @@ namespace CLGLNET
             if (res != CLResultCode.Success)
             {
                 //ViewError(res.ToString(), res.ToString());
+                Console.WriteLine($"OpenCL Error: {res}");
                 throw new Exception("Error");
             }
         }

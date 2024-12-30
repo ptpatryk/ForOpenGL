@@ -192,14 +192,14 @@ namespace CLGLNET
             GL.EnableVertexAttribArray(1);
 
         }
-     
+
 
         unsafe void InitOpenCL()
         {
             // Pobierz aktualny kontekst OpenGL
             IntPtr glContext = wglGetCurrentContext();
             IntPtr glDC = wglGetCurrentDC();
-            
+
             // Utwórz właściwości kontekstu OpenCL
             //(IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
             //(IntPtr)0x200A, glDC, // WGL_HDC_KHR
@@ -215,7 +215,6 @@ namespace CLGLNET
             CheckResult(res);
             var device = deviceIds[0];
 
-
             IntPtr platform = platformIds[1].Handle;
             IntPtr[] properties = new[] {
                    (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
@@ -224,18 +223,9 @@ namespace CLGLNET
                    //,IntPtr.Zero
                 };
 
-
             // Kontekst i kolejka
             context = CL.CreateContext(properties, (uint)deviceIds.Length, deviceIds, IntPtr.Zero, IntPtr.Zero, out res);
-            if (res != CLResultCode.Success)
-            {
-                Console.WriteLine($"OpenCL Error: {res}");
-                throw new Exception($"Error: {res}");
-            }
-
-            //CheckResult(res);
-
-
+            CheckResult(res);
 
             // Replace the line causing the error with the following line
             queue = CL.CreateCommandQueueWithProperties(context, device, IntPtr.Zero, out res);
@@ -248,7 +238,6 @@ namespace CLGLNET
 
             res = CL.BuildProgram(program, 1, new[] { device }, string.Empty, IntPtr.Zero, IntPtr.Zero);
             CheckResult(res);
-
 
             kernel = CL.CreateKernel(program, "obliczWspolrzedne", out res);
             CheckResult(res);
@@ -268,7 +257,6 @@ namespace CLGLNET
             aaBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, aa, out res);
             CheckResult(res);
 
-            //aaBuf = CL.CreateBuffer(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, (uint)(a.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(a, GCHandleType.Pinned).AddrOfPinnedObject(), out _);
             bbBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, b, out res);
             CheckResult(res);
 
@@ -289,7 +277,8 @@ namespace CLGLNET
 
             if (resultCode != CLResultCode.Success)
             {
-                throw new Exception($"Error creating CL buffer from GL buffer: {resultCode}");
+                Console.WriteLine($"Error creating buffer from GL buffer: {resultCode}");
+                // Możesz dodać dodatkowe logowanie lub obsługę błędów tutaj
             }
 
             return new CLBuffer(clBufferPtr);
@@ -345,8 +334,8 @@ namespace CLGLNET
                 //queue.AcquireGLObjects(new[] { vertexBuffer }, null);              
 
                 // Akwizycja bufora współdzielonego
-                //res = CL.EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
-                //CheckResult(res);
+                res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
+                CheckResult(res);
 
 
                 // Uruchomienie kernela
@@ -361,12 +350,71 @@ namespace CLGLNET
                 res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
                 CheckResult(res);
 
-                CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
+                //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
+
+                res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
+                CheckResult(res);
+
 
                 CL.Finish(queue);
             }
             return !kt;
         }
+        private CLResultCode EnqueueAcquireGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[] eventWaitList, out CLEvent @event)
+        {
+            IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
+            for (int i = 0; i < memObjects.Length; i++)
+            {
+                memObjectHandles[i] = memObjects[i].Handle;
+            }
+
+            IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            if (eventWaitList != null)
+            {
+                eventWaitListHandles = new IntPtr[eventWaitList.Length];
+                for (int i = 0; i < eventWaitList.Length; i++)
+                {
+                    eventWaitListHandles[i] = eventWaitList[i].Handle;
+                }
+            }
+
+            IntPtr eventHandle;
+            CLResultCode result = (CLResultCode)clEnqueueAcquireGLObjects(queue.Handle, numObjects, memObjectHandles, numEventsInWaitList, eventWaitListHandles, out eventHandle);
+            @event = new CLEvent(eventHandle);
+            return result;
+        }
+
+        private CLResultCode EnqueueReleaseGLObjects(CLCommandQueue queue, uint numObjects, CLBuffer[] memObjects, uint numEventsInWaitList, CLEvent[] eventWaitList, out CLEvent @event)
+        {
+            IntPtr[] memObjectHandles = new IntPtr[memObjects.Length];
+            for (int i = 0; i < memObjects.Length; i++)
+            {
+                memObjectHandles[i] = memObjects[i].Handle;
+            }
+
+            IntPtr[] eventWaitListHandles = Array.Empty<IntPtr>();
+            if (eventWaitList != null)
+            {
+                eventWaitListHandles = new IntPtr[eventWaitList.Length];
+                for (int i = 0; i < eventWaitList.Length; i++)
+                {
+                    eventWaitListHandles[i] = eventWaitList[i].Handle;
+                }
+            }
+
+            IntPtr eventHandle;
+            CLResultCode result = (CLResultCode)clEnqueueReleaseGLObjects(queue.Handle, numObjects, memObjectHandles, numEventsInWaitList, eventWaitListHandles, out eventHandle);
+            @event = new CLEvent(eventHandle);
+            return result;
+        }
+
+        [DllImport("OpenCL.dll", EntryPoint = "clEnqueueReleaseGLObjects")]
+        private static extern int clEnqueueReleaseGLObjects(IntPtr commandQueue, uint numObjects, IntPtr[] memObjects, uint numEventsInWaitList, IntPtr[] eventWaitList, out IntPtr @event);
+
+
+        [DllImport("OpenCL.dll", EntryPoint = "clEnqueueAcquireGLObjects")]
+        private static extern int clEnqueueAcquireGLObjects(IntPtr commandQueue, uint numObjects, IntPtr[] memObjects, uint numEventsInWaitList, IntPtr[] eventWaitList, out IntPtr @event);
+
 
     }
 }
