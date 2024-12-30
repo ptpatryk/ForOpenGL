@@ -116,14 +116,14 @@ namespace CLGLNET
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
-            CheckGLError("GL.Clear");
+            //CheckGLError("GL.Clear");
 
 
             GL.UseProgram(_shaderProgram);
-            CheckGLError("GL.UseProgram");
+            //CheckGLError("GL.UseProgram");
 
             GL.BindVertexArray(_vertexArrayObject);
-            CheckGLError("GL.BindVertexArray");
+            //CheckGLError("GL.BindVertexArray");
 
             //GL.LoadIdentity();
             //CheckGLError("GL.LoadIdentity");
@@ -135,18 +135,18 @@ namespace CLGLNET
 
             Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
-            CheckGLError("GL.UniformMatrix4 (projection)");
+            //CheckGLError("GL.UniformMatrix4 (projection)");
 
 
             int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
             GL.UniformMatrix4(location, false, ref rotationMatrix);
-            CheckGLError("GL.UniformMatrix4 (rotationMatrix)");
+            //CheckGLError("GL.UniformMatrix4 (rotationMatrix)");
 
             GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
-            CheckGLError("GL.DrawArrays");
+            //CheckGLError("GL.DrawArrays");
 
             SwapBuffers();
-            CheckGLError("SwapBuffers");
+            //CheckGLError("SwapBuffers");
         }
 
         void InitOpenGL()
@@ -333,25 +333,25 @@ namespace CLGLNET
                 // Akwizycja bufora współdzielonego
                 //res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, Array.Empty<CLEvent>(), out _);
                 res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
-                CheckResult(res);
+                //CheckResult(res);
 
 
                 // Uruchomienie kernela
                 var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
                 uint liczbaWymiarow = 2;
                 res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
-                CheckResult(res);
+                //CheckResult(res);
 
                 res = CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
-                CheckResult(res);
+                //CheckResult(res);
 
                 res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
-                CheckResult(res);
+                //CheckResult(res);
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
 
                 res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
-                CheckResult(res);
+                //CheckResult(res);
 
 
                 CL.Finish(queue);
