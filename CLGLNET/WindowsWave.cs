@@ -201,11 +201,6 @@ namespace CLGLNET
             IntPtr glContext = wglGetCurrentContext();
             IntPtr glDC = wglGetCurrentDC();
 
-            // Utwórz właściwości kontekstu OpenCL
-            //(IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
-            //(IntPtr)0x200A, glDC, // WGL_HDC_KHR
-            //IntPtr platform = IntPtr.Zero; // Add this line to define the platform variable
-            //4228u
             // Platforma i urządzenie
             res = CL.GetPlatformIds(out CLPlatform[] platformIds);
 
@@ -222,7 +217,7 @@ namespace CLGLNET
                    (IntPtr)0x2008, glContext, // GL_CONTEXT_KHR
                    (IntPtr)0x200A, glDC,   // WGL_HDC_KHR
                    (IntPtr)0x1084, platform//,
-                   //,IntPtr.Zero
+                   ,IntPtr.Zero
                 };
 
             // Kontekst i kolejka
