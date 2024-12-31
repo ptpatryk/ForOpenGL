@@ -47,12 +47,27 @@ namespace CLGLNET
         private int _vertexBufferObject;
         private int _vertexArrayObject;
         private int _shaderProgram;
+        private int _vertexShader;
+        private int _fragmentShader;
+        private float czas = 0.0f;
+        bool kt2 = true;
+        private Matrix4 projection;
+        private nuint[] globalWorkSize;
+        private CLBuffer[] TvertexBuffer;
 
         CLResultCode res;
         CLEvent clEvent;
 
         public WindowsWave(int width, int height, string title)
-            : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = new OpenTK.Mathematics.Vector2i(width, height), Title = title })
+            : base(GameWindowSettings.Default, new NativeWindowSettings() 
+            { 
+                ClientSize = new OpenTK.Mathematics.Vector2i(width, height), 
+                Title = title
+                //        // Ustawienia kontekstu graficznego
+                //        APIVersion = new Version(4, 1), // Wybierz wersję OpenGL - było 4,5
+                //        Flags = ContextFlags.ForwardCompatible, // Ustaw flagi kontekstu
+                //        Profile = ContextProfile.Core // Ustaw profil kontekstu
+            })
         {
             aa = new Punkt[N_X * N_Y];
 
@@ -80,30 +95,6 @@ namespace CLGLNET
             globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
             //TargetUpdateFrequency = 60.0;
         }
-
-        //public WindowsWave(int width, int height, string title)
-        //    : base(GameWindowSettings.Default, new NativeWindowSettings()
-        //    {
-        //        ClientSize = new OpenTK.Mathematics.Vector2i(width, height),
-        //        Title = title,
-        //        // Ustawienia kontekstu graficznego
-        //        APIVersion = new Version(4, 1), // Wybierz wersję OpenGL - było 4,5
-        //        Flags = ContextFlags.ForwardCompatible, // Ustaw flagi kontekstu
-        //        Profile = ContextProfile.Core // Ustaw profil kontekstu
-        //    })
-        //{
-        //    // Inicjalizacja danych
-        //    aa = new Punkt[N_X * N_Y];
-        //    for (int i = 0; i < aa.Length; i++)
-        //    {
-        //        aa[i].m = 1.0f;
-        //    }
-        //    vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
-        //}
-
-        private int _vertexShader;
-        private int _fragmentShader;
-        private float czas = 0.0f;
 
         protected override void OnLoad()
         {
@@ -140,22 +131,11 @@ namespace CLGLNET
             CL.ReleaseContext(context);
         }
 
-        private void Renderuj()
-        {
-            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            //GL.UseProgram(_shaderProgram); //okazuje się że to tu niepotrzebne więc wykomentowałem
-
-
-            //Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y, 0.1f, 100.0f);
 
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "model"), false, ref model);
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "view"), false, ref view);
@@ -278,27 +258,29 @@ namespace CLGLNET
             vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
             CheckResult(res);
 
-            TvertexBuffer = new[] { vertexBuffer };
+            //TvertexBuffer = new[] { vertexBuffer };
         }
-
-        bool kt2 = true;
-        private Matrix4 projection;
-        private nuint[] globalWorkSize;
-        private CLBuffer[] TvertexBuffer;
+        
+        bool r=true;
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
-            kt2 = RunKernel(kt2);
-            Renderuj();
-            czas += dt;
+            //if (r)
+            {
+                kt2 = RunKernel(kt2);
+                czas += dt;
+                r=false;
+            }
         }
+
+        CLBuffer b1, b2;
 
         bool RunKernel(bool kt)
         {
-            var b1 = kt ? aaBuf : bbBuf;
-            var b2 = kt ? bbBuf : aaBuf;
+            b1 = kt ? aaBuf : bbBuf;
+            b2 = kt ? bbBuf : aaBuf;
 
-            lock (_bufferLock)
+            //lock (_bufferLock)
             {
                 // Ustawienie argumentów kernela
                 CL.SetKernelArg(kernel, 0, b1);
@@ -325,11 +307,12 @@ namespace CLGLNET
                 //GL.Finish();
 
                 // Akwizycja bufora współdzielonego
-                res = EnqueueAcquireGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
+                //te instrukcje nie są potrzebne? (1)
+                //res = EnqueueAcquireGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
                 //CheckResult(res);
 
                 // Uruchomienie kernela
-                
+
                 uint liczbaWymiarow = 2;
                 res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
                 //CheckResult(res);
@@ -342,7 +325,8 @@ namespace CLGLNET
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
 
-                res = EnqueueReleaseGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
+                //te instrukcje nie są potrzebne? (2)
+                //res = EnqueueReleaseGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
                 //CheckResult(res);
 
                 CL.Finish(queue);

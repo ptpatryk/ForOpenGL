@@ -317,3 +317,8 @@ void main()
             //CheckGLError("SwapBuffers");
             */
             //nowe:
+
+                    private void Renderuj()
+        {
+            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+        }

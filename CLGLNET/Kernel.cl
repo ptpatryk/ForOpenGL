@@ -10,8 +10,6 @@ __kernel void obliczWspolrzedne(__global Punkt* aa, __global Punkt* bb, float dt
     int i = get_global_id(0);
     int j = get_global_id(1);
 
-
-
     if (i > 0 && i < N_X-1 && j > 0 && j < N_Y-1) {
         float F = w * (4 * aa[i * N_Y + j].x
                      - aa[i * N_Y + (j + 1)].x - aa[i * N_Y + (j - 1)].x
