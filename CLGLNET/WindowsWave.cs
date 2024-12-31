@@ -33,6 +33,8 @@ namespace CLGLNET
         object _bufferLock = new object();
         private CLContext context;
 
+        int tr = 2;
+
         int N_X = 100;
         int N_Y = 100;
         float dt = 0.01f;
@@ -58,7 +60,7 @@ namespace CLGLNET
                 aa[i].m = 1.0f;
             }
 
-            vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
+            vertices = new float[N_X * N_Y * 18*tr]; // Rozmiar bufora
 
             //TargetUpdateFrequency = 60.0;
         }
@@ -99,7 +101,7 @@ namespace CLGLNET
 
             // Ustawienia światła
             GL.UseProgram(_shaderProgram);
-            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "lightPos"), new Vector3(1.2f, 1.0f, 2.0f));
+            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "lightPos"), new Vector3(1.2f, 1.0f, 30.0f));
             GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "viewPos"), new Vector3(0.0f, 0.0f, 3.0f));
             GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "lightColor"), new Vector3(1.0f, 1.0f, 1.0f));
             GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "objectColor"), new Vector3(1.0f, 0.5f, 0.31f));
@@ -175,7 +177,18 @@ namespace CLGLNET
             // Ustawienia macierzy modelu, widoku i projekcji
             Matrix4 model = Matrix4.Identity;
             Matrix4 view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, 3.0f), Vector3.Zero, Vector3.UnitY);
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y, 0.1f, 100.0f);
+
+            #region wykombinowane
+            // Rotate the image
+            Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
+            Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
+            Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
+
+            Matrix4 projection = rotationMatrix*Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
+
+            #endregion
+
+            //Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y, 0.1f, 100.0f);
 
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "model"), false, ref model);
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "view"), false, ref view);
@@ -214,7 +227,7 @@ namespace CLGLNET
             GL.GenBuffers(1, out nbo);
             CheckGLError("Tworzenie Bufora");
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18*tr, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
             _vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayObject);
@@ -227,7 +240,7 @@ namespace CLGLNET
             CheckGLError("Ostatnia linia");
         }
 
-        unsafe void InitOpenCL()
+        void InitOpenCL()
         {
             // Pobierz aktualny kontekst OpenGL
             IntPtr glContext = wglGetCurrentContext();
@@ -280,7 +293,7 @@ namespace CLGLNET
             // Dane wejściowe
             Punkt[] b = new Punkt[N_X * N_Y];  //może w miejscu b dać aa
             PunktNormal[] c = new PunktNormal[N_X * N_Y];
-            float[] d = new float[N_X * N_Y * 18 * 4];
+            float[] d = new float[N_X * N_Y * 18*tr * 4];
 
             // Bufory
             aaBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, aa, out res);
@@ -308,7 +321,7 @@ namespace CLGLNET
             czas += dt;
         }
 
-        unsafe bool RunKernel(bool kt)
+        bool RunKernel(bool kt)
         {
             var b1 = kt ? aaBuf : bbBuf;
             var b2 = kt ? bbBuf : aaBuf;
