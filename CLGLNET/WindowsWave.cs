@@ -314,13 +314,17 @@ namespace CLGLNET
                 // Uruchomienie kernela
 
                 uint liczbaWymiarow = 2;
-                res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                CLEvent dozwolnienia;
+                res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out dozwolnienia);
+                CL.ReleaseEvent(dozwolnienia); //potrzebne żeby nie było wycieków pamięci
                 //CheckResult(res);
 
-                res = CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                res = CL.EnqueueNDRangeKernel(queue, kernelTrujkatow, liczbaWymiarow, null, globalWorkSize, null, 0, null, out dozwolnienia);
+                CL.ReleaseEvent(dozwolnienia);
                 //CheckResult(res);
 
-                res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
+                res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out dozwolnienia);
+                CL.ReleaseEvent(dozwolnienia);
                 //CheckResult(res);
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
