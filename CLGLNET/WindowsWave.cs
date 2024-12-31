@@ -4,6 +4,7 @@ using OpenTK.Compute.OpenCL;
 using OpenTK.Windowing.Common;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace CLGLNET
 {
@@ -62,6 +63,28 @@ namespace CLGLNET
             //TargetUpdateFrequency = 60.0;
         }
 
+        //public WindowsWave(int width, int height, string title)
+        //    : base(GameWindowSettings.Default, new NativeWindowSettings()
+        //    {
+        //        ClientSize = new OpenTK.Mathematics.Vector2i(width, height),
+        //        Title = title,
+        //        // Ustawienia kontekstu graficznego
+        //        APIVersion = new Version(4, 1), // Wybierz wersję OpenGL - było 4,5
+        //        Flags = ContextFlags.ForwardCompatible, // Ustaw flagi kontekstu
+        //        Profile = ContextProfile.Core // Ustaw profil kontekstu
+        //    })
+        //{
+        //    // Inicjalizacja danych
+        //    aa = new Punkt[N_X * N_Y];
+        //    for (int i = 0; i < aa.Length; i++)
+        //    {
+        //        aa[i].m = 1.0f;
+        //    }
+        //    vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
+        //}
+
+
+
         private int _vertexShader;
         private int _fragmentShader;
         private float czas = 0.0f;
@@ -73,6 +96,13 @@ namespace CLGLNET
             InitOpenGL();
 
             InitOpenCL();
+
+            // Ustawienia światła
+            GL.UseProgram(_shaderProgram);
+            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "lightPos"), new Vector3(1.2f, 1.0f, 2.0f));
+            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "viewPos"), new Vector3(0.0f, 0.0f, 3.0f));
+            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "lightColor"), new Vector3(1.0f, 1.0f, 1.0f));
+            GL.Uniform3(GL.GetUniformLocation(_shaderProgram, "objectColor"), new Vector3(1.0f, 0.5f, 0.31f));
         }
 
         protected override void OnUnload()
@@ -101,6 +131,7 @@ namespace CLGLNET
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            /*
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
@@ -133,6 +164,27 @@ namespace CLGLNET
 
             SwapBuffers();
             //CheckGLError("SwapBuffers");
+            */
+            //nowe:
+            base.OnRenderFrame(e);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            GL.UseProgram(_shaderProgram);
+
+            // Ustawienia macierzy modelu, widoku i projekcji
+            Matrix4 model = Matrix4.Identity;
+            Matrix4 view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, 3.0f), Vector3.Zero, Vector3.UnitY);
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y, 0.1f, 100.0f);
+
+            GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "model"), false, ref model);
+            GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "view"), false, ref view);
+            GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
+
+            GL.BindVertexArray(_vertexArrayObject);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
+
+            SwapBuffers();
         }
 
         void InitOpenGL()

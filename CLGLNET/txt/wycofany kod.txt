@@ -261,3 +261,23 @@
                 //CL.EnqueueReadBuffer(queue, clNbo, true, (nuint)0, (nuint)(punktyINormalne.Length * sizeof(PunktNormal)), (nint)GCHandle.Alloc(punktyINormalne, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
                 //CL.EnqueueReadBuffer(queue, b1, true, (nuint)0, (nuint)(punkty.Length * sizeof(Punkt)), (nint)GCHandle.Alloc(punkty, GCHandleType.Pinned).AddrOfPinnedObject(), 0, null, out _);
 
+#version 330 core
+out vec4 FragColor;
+void main()
+{
+    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+
+#version 330 core
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
+
+uniform mat4 rotationMatrix;
+uniform mat4 projection;
+out vec3 Normal;
+
+void main()
+{
+    gl_Position = projection * rotationMatrix * vec4(aPosition, 1.0);
+    Normal = aNormal;
+}
