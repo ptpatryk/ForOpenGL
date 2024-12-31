@@ -42,7 +42,8 @@ namespace CLGLNET
         //PunktNormal[] punktyINormalne;
         Punkt[] aa;
         float[] vertices;
-
+        private Matrix4 model;
+        private Matrix4 view;
         private int _vertexBufferObject;
         private int _vertexArrayObject;
         private int _shaderProgram;
@@ -62,6 +63,21 @@ namespace CLGLNET
 
             vertices = new float[N_X * N_Y * 18*tr]; // Rozmiar bufora
 
+            // Ustawienia macierzy modelu, widoku i projekcji
+            model = Matrix4.Identity;
+            view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, 3.0f), Vector3.Zero, Vector3.UnitY);
+
+            #region wykombinowane
+            // Rotate the image
+            Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
+            Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
+            Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
+
+            projection = rotationMatrix * Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
+
+            #endregion
+
+            globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
             //TargetUpdateFrequency = 60.0;
         }
 
@@ -84,8 +100,6 @@ namespace CLGLNET
         //    }
         //    vertices = new float[N_X * N_Y * 18]; // Rozmiar bufora
         //}
-
-
 
         private int _vertexShader;
         private int _fragmentShader;
@@ -133,60 +147,13 @@ namespace CLGLNET
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            /*
-            base.OnRenderFrame(e);
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            //CheckGLError("GL.Clear");
-
-            GL.UseProgram(_shaderProgram);
-            //CheckGLError("GL.UseProgram");
-
-            GL.BindVertexArray(_vertexArrayObject);
-            //CheckGLError("GL.BindVertexArray");
-
-            //GL.LoadIdentity();
-            //CheckGLError("GL.LoadIdentity");
-
-            // Rotate the image
-            Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
-            Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
-            Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
-
-            Matrix4 projection = Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
-            GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
-            //CheckGLError("GL.UniformMatrix4 (projection)");
-
-            int location = GL.GetUniformLocation(_shaderProgram, "rotationMatrix");
-            GL.UniformMatrix4(location, false, ref rotationMatrix);
-            //CheckGLError("GL.UniformMatrix4 (rotationMatrix)");
-
-            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
-            //CheckGLError("GL.DrawArrays");
-
-            SwapBuffers();
-            //CheckGLError("SwapBuffers");
-            */
-            //nowe:
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.UseProgram(_shaderProgram);
+            //GL.UseProgram(_shaderProgram); //okazuje się że to tu niepotrzebne więc wykomentowałem
 
-            // Ustawienia macierzy modelu, widoku i projekcji
-            Matrix4 model = Matrix4.Identity;
-            Matrix4 view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, 3.0f), Vector3.Zero, Vector3.UnitY);
-
-            #region wykombinowane
-            // Rotate the image
-            Matrix4 rotationMatrixZ = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45.0f)); // Rotate 10 degrees around X axis
-            Matrix4 rotationMatrixX = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(30.0f)); // Rotate 30 degrees around Y axis
-            Matrix4 rotationMatrix = rotationMatrixZ * rotationMatrixX; // Combine rotations
-
-            Matrix4 projection = rotationMatrix*Matrix4.CreateOrthographic(150.0f, 150.0f, -50.0f, 50.0f);
-
-            #endregion
 
             //Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y, 0.1f, 100.0f);
 
@@ -195,7 +162,7 @@ namespace CLGLNET
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
 
             GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 2);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 36);
 
             SwapBuffers();
         }
@@ -310,9 +277,14 @@ namespace CLGLNET
             // Utwórz bufor współdzielony między OpenCL i OpenGL
             vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
             CheckResult(res);
+
+            TvertexBuffer = new[] { vertexBuffer };
         }
 
         bool kt2 = true;
+        private Matrix4 projection;
+        private nuint[] globalWorkSize;
+        private CLBuffer[] TvertexBuffer;
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
@@ -353,11 +325,11 @@ namespace CLGLNET
                 //GL.Finish();
 
                 // Akwizycja bufora współdzielonego
-                res = EnqueueAcquireGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
+                res = EnqueueAcquireGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
                 //CheckResult(res);
 
                 // Uruchomienie kernela
-                var globalWorkSize = new nuint[] { (nuint)N_X, (nuint)N_Y };
+                
                 uint liczbaWymiarow = 2;
                 res = CL.EnqueueNDRangeKernel(queue, kernel, liczbaWymiarow, null, globalWorkSize, null, 0, null, out _);
                 //CheckResult(res);
@@ -370,7 +342,7 @@ namespace CLGLNET
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);
 
-                res = EnqueueReleaseGLObjects(queue, 1, new[] { vertexBuffer }, 0, null, out _);
+                res = EnqueueReleaseGLObjects(queue, 1, TvertexBuffer, 0, null, out _);
                 //CheckResult(res);
 
                 CL.Finish(queue);
