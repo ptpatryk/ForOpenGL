@@ -1,9 +1,10 @@
 #version 330 core
-layout(location = 0) in vec3 v0;
-layout(location = 1) in vec3 v1;
-layout(location = 2) in vec3 v2;
 
-out vec3 fragNormal;
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
+
+out vec3 FragPos;
+out vec3 Normal;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -11,11 +12,8 @@ uniform mat4 projection;
 
 void main()
 {
-    // Calculate the normal from three vertices
-    vec3 edge1 = v1 - v0;
-    vec3 edge2 = v2 - v0;
-    fragNormal = normalize(cross(edge1, edge2));
-    
-    // Transform the vertex position (using v0 as an example)
-    gl_Position = projection * view * model * vec4(v0, 1.0);
+    FragPos = vec3(model * vec4(aPosition, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;  
+
+    gl_Position = projection * view * vec4(FragPos, 1.0);
 }
