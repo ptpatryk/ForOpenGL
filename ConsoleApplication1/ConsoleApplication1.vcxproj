@@ -137,6 +137,7 @@
     <ClCompile Include="InitGLCL.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Source1.cpp" />
+    <ClCompile Include="WindowsWave.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl" />
@@ -148,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Fale.h" />
+    <ClInclude Include="WindowsWave.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Text.txt" />

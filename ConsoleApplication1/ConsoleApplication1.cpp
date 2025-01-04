@@ -9,14 +9,16 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "Fale.h"
+//#include "Fale.h"
 #include <thread>
 #include <chrono>
+
+#include "WindowsWave.h"
 //struct _punkt { float m, v, x; };
 
-_punkt** plat[2];
+//_punkt** plat[2];
 
-_punkt** aa;
+//_punkt** aa;
 
 float DiffuseLight1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float LightPosition1[] = { 0.0f, 20.0f, 180.0f, 1.0f };
@@ -109,6 +111,7 @@ GLuint createShaderProgram(const char* vertexPath, const char* fragmentPath) {
 GLuint shaderProgram;
 
 // Funkcja do rysowania trójkąta
+/*
 void display() {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -201,7 +204,7 @@ void display() {
 	glutSwapBuffers();
 
 }
-
+*/
 // Funkcja do ustawienia perspektywy
 void reshape(int w, int h) {
 	glViewport(0, 0, w, h);
@@ -281,7 +284,7 @@ void GLRenderer(int osx, int osy, int osz)
 	
 }
 
-
+/*
 void SetPlat(_punkt** dane, int osx, int osy, int osz)
 {
 	//glEnable(GL_LIGHTING);
@@ -303,10 +306,13 @@ void threadFunction() {
 	}
 
 }
-
+*/
 
 int main(int argc, char** argv) {
-	glutInit(&argc, argv);
+	WindowsWave wave(800, 600, "WindowsWave");
+	wave.Run();
+	return 0;
+	/*glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(800, 600);
 	glutCreateWindow("3D Triangle with Shaders");
@@ -330,7 +336,7 @@ std::thread myThread(threadFunction);
 	glutMainLoop();
 	myThread.join();
 
-	return 0;
+	return 0;*/
 }
 
 

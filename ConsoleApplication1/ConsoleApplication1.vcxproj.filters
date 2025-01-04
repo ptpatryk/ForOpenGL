@@ -30,6 +30,9 @@
     <ClCompile Include="Source1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsWave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -45,6 +48,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Fale.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsWave.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
