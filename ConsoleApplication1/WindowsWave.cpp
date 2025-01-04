@@ -7,6 +7,10 @@
 #include <math.h>
 #include <chrono>
 #include <thread>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -128,6 +132,38 @@ void WindowsWave::InitOpenGL() {
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Ustawienia œwiate³
+    glUseProgram(_shaderProgram);
+    GLint lightPosLoc = glGetUniformLocation(_shaderProgram, "lightPos");
+    GLint viewPosLoc = glGetUniformLocation(_shaderProgram, "viewPos");
+    GLint lightColorLoc = glGetUniformLocation(_shaderProgram, "lightColor");
+    GLint objectColorLoc = glGetUniformLocation(_shaderProgram, "objectColor");
+
+    glUniform3f(lightPosLoc, 1.2f, 1.0f, 30.0f);
+    glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f);
+    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+    glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+
+    // Ustawienia macierzy
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 rotationMatrixZ = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 rotationMatrixX = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 rotationMatrix = rotationMatrixZ * rotationMatrixX;
+
+    glm::mat4 projection = rotationMatrix * glm::ortho(-150.0f, 150.0f, -150.0f, 150.0f, -50.0f, 50.0f);
+
+    GLint modelLoc = glGetUniformLocation(_shaderProgram, "model");
+    GLint viewLoc = glGetUniformLocation(_shaderProgram, "view");
+    GLint projectionLoc = glGetUniformLocation(_shaderProgram, "projection");
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+
 }
 
 void WindowsWave::InitOpenCL() {
@@ -214,11 +250,12 @@ void WindowsWave::OnRenderFrame() {
 }
 
 void WindowsWave::OnUpdateFrame() {
-    if (r) {
+    //if (r) {
         kt2 = RunKernel(kt2);
         czas += dt;
         r = false;
-    }
+        OnRenderFrame();
+    //}
 }
 
 bool WindowsWave::RunKernel(bool kt) {
