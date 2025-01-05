@@ -78,6 +78,8 @@ WindowsWave::WindowsWave(int width, int height, const std::string& title) {
     aa = new Punkt[N_X * N_Y];
     for (int i = 0; i < N_X * N_Y; ++i) {
         aa[i].m = 1.0f;
+        aa[i].v = 0.0f;
+        aa[i].x = 0.0f;
     }
 
     vertices = new float[N_X * N_Y * 18 * 2];
