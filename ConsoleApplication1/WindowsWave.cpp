@@ -1,4 +1,3 @@
-// WindowsWave.cpp
 #include "WindowsWave.h"
 #include <iostream>
 #include <fstream>
@@ -252,12 +251,8 @@ void WindowsWave::OnRenderFrame() {
 }
 
 void WindowsWave::OnUpdateFrame() {
-    //if (r) {
         kt2 = RunKernel(kt2);
         czas += dt;
-        r = false;
-        //OnRenderFrame();
-    //}
 }
 
 bool WindowsWave::RunKernel(bool kt) {
@@ -291,33 +286,6 @@ bool WindowsWave::RunKernel(bool kt) {
     clFinish(queue);
     return !kt;
 }
-/*
-void WindowsWave::Run() {
-    MSG msg = {};
-    auto lastTime = std::chrono::high_resolution_clock::now();
-    const std::chrono::milliseconds frameDuration(16); // 60 FPS
-
-    while (msg.message != WM_QUIT) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        else {
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
-
-            if (elapsedTime >= frameDuration) {
-                OnUpdateFrame();
-                OnRenderFrame();
-                lastTime = currentTime;
-            }
-            else {
-                std::this_thread::sleep_for(frameDuration - elapsedTime);
-            }
-        }
-    }
-}
-*/
 
 
 void WindowsWave::Run() {

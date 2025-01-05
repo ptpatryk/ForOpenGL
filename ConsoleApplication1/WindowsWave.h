@@ -43,7 +43,6 @@ private:
     GLuint _vertexBufferObject, _vertexArrayObject, _shaderProgram, _vertexShader, _fragmentShader;
     bool kt2 = true;
     size_t globalWorkSize[2];
-    bool r = true;
     HWND hwnd;
     HDC hdc;
     HGLRC hglrc;
