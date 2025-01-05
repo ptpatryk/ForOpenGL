@@ -256,7 +256,7 @@ void WindowsWave::OnUpdateFrame() {
         kt2 = RunKernel(kt2);
         czas += dt;
         r = false;
-        OnRenderFrame();
+        //OnRenderFrame();
     //}
 }
 
