@@ -309,7 +309,7 @@ void threadFunction() {
 */
 
 int main(int argc, char** argv) {
-	WindowsWave wave(800, 600, "WindowsWave");
+	WindowsWave wave(1600, 1200, "WindowsWave");
 	wave.Run();
 	return 0;
 	/*glutInit(&argc, argv);

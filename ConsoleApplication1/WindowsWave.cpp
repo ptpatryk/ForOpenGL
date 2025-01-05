@@ -291,7 +291,7 @@ bool WindowsWave::RunKernel(bool kt) {
     clFinish(queue);
     return !kt;
 }
-
+/*
 void WindowsWave::Run() {
     MSG msg = {};
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -317,9 +317,9 @@ void WindowsWave::Run() {
         }
     }
 }
+*/
 
 
-/*
 void WindowsWave::Run() {
     MSG msg = {};
     while (msg.message != WM_QUIT) {
@@ -333,4 +333,3 @@ void WindowsWave::Run() {
         }
     }
 }
-*/
