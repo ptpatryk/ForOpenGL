@@ -8,13 +8,6 @@
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 
-struct Punkt {
-    float m, v, x;
-};
-
-struct PunktNormal {
-    float x, y, z, nx, ny, nz;
-};
 
 class WindowsWave {
 public:
@@ -35,17 +28,26 @@ private:
     cl_kernel kernel, kernelTrujkatow, kernelPrzygotujTrojkaty;
     cl_mem aaBuf, bbBuf, clNbo, vertexBuffer;
     cl_context context;
-    int N_X = 100;
-    int N_Y = 100;
-    float dt = 0.01f, w = -2.0f, czas = 0.0f;
-    Punkt* aa;
-    float* vertices;
     GLuint _vertexBufferObject, _vertexArrayObject, _shaderProgram, _vertexShader, _fragmentShader;
-    bool kt2 = true;
     size_t globalWorkSize[2];
     HWND hwnd;
     HDC hdc;
     HGLRC hglrc;
+
+    struct Punkt {
+        float m, v, x;
+    };
+
+    struct PunktNormal {
+        float x, y, z, nx, ny, nz;
+    };
+
+    bool kt2 = true;
+    int N_X = 100;
+    int N_Y = 100;
+    float dt = 0.01f, w = -2.0f, czas = 0.0f;
+    float* vertices;
+    Punkt* aa;
 };
 
 #endif // WINDOWSWAVE_H

@@ -11,8 +11,6 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
-#include "ForWindow.cpp"
-
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -53,6 +51,13 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
     if (!hwnd) {
         std::cerr << "Failed to create window" << std::endl;
         exit(EXIT_FAILURE);
+    }
+
+    aa = new Punkt[N_X * N_Y];
+    for (int i = 0; i < N_X * N_Y; ++i) {
+        aa[i].m = 1.0f;
+        aa[i].v = 0.0f;
+        aa[i].x = 0.0f;
     }
 
     ShowWindow(hwnd, SW_SHOW);

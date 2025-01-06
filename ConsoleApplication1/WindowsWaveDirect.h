@@ -39,6 +39,10 @@ private:
         float x;
     };
 
+    struct PunktNormal {
+        float x, y, z, nx, ny, nz;
+    };
+
     Punkt* aa = nullptr;
     float czas = 0.0f;
     float dt = 0.01f;
