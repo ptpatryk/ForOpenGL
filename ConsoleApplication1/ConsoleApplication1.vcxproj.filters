@@ -63,4 +63,9 @@
   <ItemGroup>
     <Text Include="Text.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="ComputeShader.hlsl">
+      <Filter>Source Files</Filter>
+    </FxCompile>
+  </ItemGroup>
 </Project>

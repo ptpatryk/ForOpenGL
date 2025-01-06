@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include "WindowsWave.h"
+#include "WindowsWaveDirect.h"
 //struct _punkt { float m, v, x; };
 
 //_punkt** plat[2];
@@ -309,7 +310,8 @@ void threadFunction() {
 */
 
 int main(int argc, char** argv) {
-	WindowsWave wave(1600, 1200, "WindowsWave");
+	//WindowsWave wave(1600, 1200, "WindowsWave");
+	WindowsWaveDirect wave(1600, 1200, "WindowsWave");
 	wave.Run();
 	return 0;
 	/*glutInit(&argc, argv);
