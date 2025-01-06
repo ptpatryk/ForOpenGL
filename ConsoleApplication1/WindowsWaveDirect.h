@@ -32,6 +32,8 @@ private:
     ID3D11ComputeShader* computeShader3 = nullptr;
     ID3D11Buffer* aaBuffer = nullptr;
     ID3D11Buffer* bbBuffer = nullptr;
+    ID3D11Buffer* clNbo = nullptr;
+    ID3D11Buffer* vertexBuffer = nullptr;
     ID3D11UnorderedAccessView* aaUAV = nullptr;
     ID3D11UnorderedAccessView* bbUAV = nullptr;
 

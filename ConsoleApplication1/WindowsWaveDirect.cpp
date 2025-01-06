@@ -24,6 +24,67 @@ LRESULT CALLBACK WindowProcFor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+//--------------------------------------------------------------------------------------
+// Create Structured Buffer
+//--------------------------------------------------------------------------------------
+_Use_decl_annotations_
+HRESULT CreateStructuredBuffer(ID3D11Device* pDevice, UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBufOut)
+{
+    *ppBufOut = nullptr;
+
+    D3D11_BUFFER_DESC desc = {};
+    desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+    desc.ByteWidth = uElementSize * uCount;
+    desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    desc.StructureByteStride = uElementSize;
+
+    if (pInitData)
+    {
+        D3D11_SUBRESOURCE_DATA InitData;
+        InitData.pSysMem = pInitData;
+        return pDevice->CreateBuffer(&desc, &InitData, ppBufOut);
+    }
+    else
+        return pDevice->CreateBuffer(&desc, nullptr, ppBufOut);
+}
+//--------------------------------------------------------------------------------------
+// Create Unordered Access View for Structured or Raw Buffers
+//-------------------------------------------------------------------------------------- 
+_Use_decl_annotations_
+HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11UnorderedAccessView** ppUAVOut)
+{
+    D3D11_BUFFER_DESC descBuf = {};
+    pBuffer->GetDesc(&descBuf);
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC desc = {};
+    desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    desc.Buffer.FirstElement = 0;
+
+    if (descBuf.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
+    {
+        // This is a Raw Buffer
+
+        desc.Format = DXGI_FORMAT_R32_TYPELESS; // Format must be DXGI_FORMAT_R32_TYPELESS, when creating Raw Unordered Access View
+        desc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
+        desc.Buffer.NumElements = descBuf.ByteWidth / 4;
+    }
+    else
+        if (descBuf.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
+        {
+            // This is a Structured Buffer
+
+            desc.Format = DXGI_FORMAT_UNKNOWN;      // Format must be must be DXGI_FORMAT_UNKNOWN, when creating a View of a Structured Buffer
+            desc.Buffer.NumElements = descBuf.ByteWidth / descBuf.StructureByteStride;
+        }
+        else
+        {
+            return E_INVALIDARG;
+        }
+
+    return pDevice->CreateUnorderedAccessView(pBuffer, &desc, ppUAVOut);
+}
+
+
 WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& title) {
     // Register the window class
     WNDCLASS wc = {};
@@ -66,6 +127,7 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
     InitDirectX();
     InitDirectCompute();
 }
+
 
 WindowsWaveDirect::~WindowsWaveDirect() {
     // Clean up DirectX resources
@@ -143,17 +205,12 @@ void WindowsWaveDirect::InitDirectCompute() {
     device->CreateComputeShader(csBlob3->GetBufferPointer(), csBlob3->GetBufferSize(), nullptr, &computeShader3);
 
     // Create buffers
-    D3D11_BUFFER_DESC bufferDesc = {};
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(Punkt) * N_X * N_Y;
-    bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-    bufferDesc.CPUAccessFlags = 0;
+    CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
+    CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
+    CreateStructuredBuffer(device, sizeof(PunktNormal), N_X * N_Y, nullptr, &aaBuffer);
+    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &aaBuffer);  //nie jestem pewien czy ma byæ ich razy 36
 
-    D3D11_SUBRESOURCE_DATA initData = {};
-    initData.pSysMem = aa;
-    device->CreateBuffer(& bufferDesc, & initData, & aaBuffer);
-    device->CreateBuffer(&bufferDesc, NULL, &bbBuffer);
-
+    /*
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
     uavDesc.Format = DXGI_FORMAT_UNKNOWN;
     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
@@ -162,6 +219,11 @@ void WindowsWaveDirect::InitDirectCompute() {
 
     device->CreateUnorderedAccessView(aaBuffer, &uavDesc, &aaUAV);
     device->CreateUnorderedAccessView(bbBuffer, &uavDesc, &bbUAV);
+    */
+    //todo: zamiast tego to: - ale i tak nie wiem dlaczego musi byæ to bufor uav?
+    CreateBufferUAV(device, aaBuffer, &aaUAV);
+    CreateBufferUAV(device, bbBuffer, &bbUAV);
+
 }
 
 void WindowsWaveDirect::OnRenderFrame() {

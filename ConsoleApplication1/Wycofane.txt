@@ -1,0 +1,10 @@
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(Punkt) * N_X * N_Y;
+    bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+    bufferDesc.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = aa;
+    device->CreateBuffer(&bufferDesc, &initData, &aaBuffer);
+    device->CreateBuffer(&bufferDesc, NULL, &bbBuffer);
