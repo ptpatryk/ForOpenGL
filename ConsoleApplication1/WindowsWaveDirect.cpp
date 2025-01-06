@@ -127,17 +127,17 @@ void WindowsWaveDirect::InitDirectCompute() {
     //device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), NULL, &computeShader);
     //csBlob->Release(); //TODO: co robi ta funkcja i czy powinienem jej u¿ywaæ?
 
-    ID3D11ComputeShader* computeShader1;
+    //ID3D11ComputeShader* computeShader1;
     ID3DBlob* csBlob1 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "obliczWspolrzedne", "cs_5_0", 0, 0, &csBlob1, nullptr);
     device->CreateComputeShader(csBlob1->GetBufferPointer(), csBlob1->GetBufferSize(), nullptr, &computeShader1);
 
-    ID3D11ComputeShader* computeShader2;
+    //ID3D11ComputeShader* computeShader2;
     ID3DBlob* csBlob2 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "obliczNormalne", "cs_5_0", 0, 0, &csBlob2, nullptr);
     device->CreateComputeShader(csBlob2->GetBufferPointer(), csBlob2->GetBufferSize(), nullptr, &computeShader2);
 
-    ID3D11ComputeShader* computeShader3;
+    //ID3D11ComputeShader* computeShader3;
     ID3DBlob* csBlob3 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "przygotujTrojkaty", "cs_5_0", 0, 0, &csBlob3, nullptr);
     device->CreateComputeShader(csBlob3->GetBufferPointer(), csBlob3->GetBufferSize(), nullptr, &computeShader3);
@@ -179,7 +179,7 @@ void WindowsWaveDirect::OnUpdateFrame() {
 }
 
 void WindowsWaveDirect::RunKernel() {
-    deviceContext->CSSetShader(computeShader, NULL, 0);
+    deviceContext->CSSetShader(computeShader1, NULL, 0);
     deviceContext->CSSetUnorderedAccessViews(0, 1, &aaUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &bbUAV, NULL);
 

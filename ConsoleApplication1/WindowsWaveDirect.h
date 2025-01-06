@@ -27,7 +27,9 @@ private:
     ID3D11DeviceContext* deviceContext = nullptr;
     IDXGISwapChain* swapChain = nullptr;
     ID3D11RenderTargetView* renderTargetView = nullptr;
-    ID3D11ComputeShader* computeShader = nullptr;
+    ID3D11ComputeShader* computeShader1 = nullptr;
+    ID3D11ComputeShader* computeShader2 = nullptr;
+    ID3D11ComputeShader* computeShader3 = nullptr;
     ID3D11Buffer* aaBuffer = nullptr;
     ID3D11Buffer* bbBuffer = nullptr;
     ID3D11UnorderedAccessView* aaUAV = nullptr;
