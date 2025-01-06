@@ -14,6 +14,7 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+//ID3D11Buffer* CreateAndCopyToDebugBuf(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pd3dImmediateContext, _In_ ID3D11Buffer* pBuffer);
 
 LRESULT CALLBACK WindowProcFor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -193,6 +194,7 @@ void WindowsWaveDirect::InitDirectCompute() {
     ID3DBlob* csBlob1 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "obliczWspolrzedne", "cs_5_0", 0, 0, &csBlob1, nullptr);
     device->CreateComputeShader(csBlob1->GetBufferPointer(), csBlob1->GetBufferSize(), nullptr, &computeShader1);
+    csBlob1->Release();
 
     //ID3D11ComputeShader* computeShader2;
     ID3DBlob* csBlob2 = nullptr;
@@ -207,22 +209,45 @@ void WindowsWaveDirect::InitDirectCompute() {
     // Create buffers
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
-    CreateStructuredBuffer(device, sizeof(PunktNormal), N_X * N_Y, nullptr, &aaBuffer);
-    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &aaBuffer);  //nie jestem pewien czy ma byÊ ich razy 36
+    CreateStructuredBuffer(device, sizeof(PunktNormal), N_X * N_Y, nullptr, &clNbo);
+    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byÊ ich razy 36
 
-    /*
-    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-    uavDesc.Buffer.FirstElement = 0;
-    uavDesc.Buffer.NumElements = N_X * N_Y;
-
-    device->CreateUnorderedAccessView(aaBuffer, &uavDesc, &aaUAV);
-    device->CreateUnorderedAccessView(bbBuffer, &uavDesc, &bbUAV);
-    */
-    //todo: zamiast tego to: - ale i tak nie wiem dlaczego musi byÊ to bufor uav?
+    printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
     CreateBufferUAV(device, bbBuffer, &bbUAV);
+    CreateBufferUAV(device, clNbo, &clUAV);
+    CreateBufferUAV(device, vertexBuffer, &vertexUAV);
+
+     
+//blok ustawiajπce sta≥e w buforze ////////////////////////
+
+    struct Constants
+    {
+        float dt;
+        float w;
+        int N_X;
+        int N_Y;
+        float zv;
+        float czas;
+    };
+
+    
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(Constants);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    Constants constants = { 0.016f, 1.0f, 100, 100, 0.5f, 0.0f }; // Przyk≥adowe wartoúci
+    initData.pSysMem = &constants;
+
+    HRESULT hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
+    if (FAILED(hr))
+    {
+        // Obs≥uga b≥Ídu
+    }
+////koniec tego bloku
 
 }
 
@@ -245,10 +270,87 @@ void WindowsWaveDirect::RunKernel() {
     deviceContext->CSSetUnorderedAccessViews(0, 1, &aaUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &bbUAV, NULL);
 
+    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
+
     deviceContext->Dispatch(N_X, N_Y, 1);
 
     // Swap buffers
     std::swap(aaUAV, bbUAV);
+
+    ID3D11Buffer* stagingBuffer = nullptr;
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.Usage = D3D11_USAGE_STAGING;
+    bufferDesc.ByteWidth = sizeof(Punkt) * N_X*N_Y; // Zastπp TwojeDane odpowiedniπ strukturπ danych
+    bufferDesc.BindFlags = 0;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+    HRESULT hr = device->CreateBuffer(&bufferDesc, nullptr, &stagingBuffer);
+    if (FAILED(hr))
+    {
+        // Obs≥uga b≥Ídu
+		int i = 0;
+    }
+
+    deviceContext->CopyResource(stagingBuffer, bbBuffer);
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    if (SUCCEEDED(hr))
+    {
+        // Uzyskaj wskaünik do danych
+        Punkt* dane = reinterpret_cast<Punkt*>(mappedResource.pData);
+
+        // Przetwarzaj dane
+        // ...
+
+        // Odmapuj bufor
+        deviceContext->Unmap(stagingBuffer, 0);
+    }
+    else
+    {
+        // Obs≥uga b≥Ídu
+    }
+
+
+	int i = 0;  
+}
+
+//--------------------------------------------------------------------------------------
+// Run CS
+//-------------------------------------------------------------------------------------- 
+_Use_decl_annotations_
+void RunComputeShader(ID3D11DeviceContext* pd3dImmediateContext,
+    ID3D11ComputeShader* pComputeShader,
+    UINT nNumViews, ID3D11ShaderResourceView** pShaderResourceViews,
+    ID3D11Buffer* pCBCS, void* pCSData, DWORD dwNumDataBytes,
+    ID3D11UnorderedAccessView* pUnorderedAccessView,
+    UINT X, UINT Y, UINT Z)
+{
+    pd3dImmediateContext->CSSetShader(pComputeShader, nullptr, 0);
+    pd3dImmediateContext->CSSetShaderResources(0, nNumViews, pShaderResourceViews);
+    pd3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pUnorderedAccessView, nullptr);
+    if (pCBCS && pCSData)
+    {
+        D3D11_MAPPED_SUBRESOURCE MappedResource;
+        pd3dImmediateContext->Map(pCBCS, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
+        memcpy(MappedResource.pData, pCSData, dwNumDataBytes);
+        pd3dImmediateContext->Unmap(pCBCS, 0);
+        ID3D11Buffer* ppCB[1] = { pCBCS };
+        pd3dImmediateContext->CSSetConstantBuffers(0, 1, ppCB);
+    }
+
+    pd3dImmediateContext->Dispatch(X, Y, Z);
+
+    pd3dImmediateContext->CSSetShader(nullptr, nullptr, 0);
+
+    ID3D11UnorderedAccessView* ppUAViewnullptr[1] = { nullptr };
+    pd3dImmediateContext->CSSetUnorderedAccessViews(0, 1, ppUAViewnullptr, nullptr);
+
+    ID3D11ShaderResourceView* ppSRVnullptr[2] = { nullptr, nullptr };
+    pd3dImmediateContext->CSSetShaderResources(0, 2, ppSRVnullptr);
+
+    ID3D11Buffer* ppCBnullptr[1] = { nullptr };
+    pd3dImmediateContext->CSSetConstantBuffers(0, 1, ppCBnullptr);
 }
 
 void WindowsWaveDirect::Run() {
@@ -263,4 +365,29 @@ void WindowsWaveDirect::Run() {
             OnRenderFrame();
         }
     }
+}
+
+//--------------------------------------------------------------------------------------
+// Create a CPU accessible buffer and download the content of a GPU buffer into it
+// This function is very useful for debugging CS programs
+//-------------------------------------------------------------------------------------- 
+_Use_decl_annotations_
+ID3D11Buffer* WindowsWaveDirect::CreateAndCopyToDebugBuf(ID3D11Device* pDevice, ID3D11DeviceContext* pd3dImmediateContext, ID3D11Buffer* pBuffer)
+{
+    ID3D11Buffer* debugbuf = nullptr;
+
+    D3D11_BUFFER_DESC desc = {};
+    pBuffer->GetDesc(&desc);
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.MiscFlags = 0;
+    if (SUCCEEDED(pDevice->CreateBuffer(&desc, nullptr, &debugbuf)))
+    {
+
+
+        pd3dImmediateContext->CopyResource(debugbuf, pBuffer);
+    }
+
+    return debugbuf;
 }

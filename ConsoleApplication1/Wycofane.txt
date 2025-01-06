@@ -8,3 +8,14 @@
     initData.pSysMem = aa;
     device->CreateBuffer(&bufferDesc, &initData, &aaBuffer);
     device->CreateBuffer(&bufferDesc, NULL, &bbBuffer);
+
+        /*
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.NumElements = N_X * N_Y;
+
+    device->CreateUnorderedAccessView(aaBuffer, &uavDesc, &aaUAV);
+    device->CreateUnorderedAccessView(bbBuffer, &uavDesc, &bbUAV);
+    */

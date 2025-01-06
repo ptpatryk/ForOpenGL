@@ -36,6 +36,12 @@ private:
     ID3D11Buffer* vertexBuffer = nullptr;
     ID3D11UnorderedAccessView* aaUAV = nullptr;
     ID3D11UnorderedAccessView* bbUAV = nullptr;
+    ID3D11UnorderedAccessView* clUAV = nullptr;
+    ID3D11UnorderedAccessView* vertexUAV = nullptr;
+    
+    ID3D11Buffer* constantBuffer = nullptr;
+
+    ID3D11Buffer* CreateAndCopyToDebugBuf(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pd3dImmediateContext, _In_ ID3D11Buffer* pBuffer);
 
     struct Punkt {
         float m;

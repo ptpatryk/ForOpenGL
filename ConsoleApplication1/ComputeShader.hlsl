@@ -55,12 +55,15 @@ void obliczWspolrzedne(
     if (czas < 12.56 && i == 50 && j == 50)
     {
         bb[5050].v = zv;
+        bb[i * N_Y + j].m = aa[i * N_Y + j].m;
     }
 
     if (i == 0 || i == N_X - 1 || j == 0 || j == N_Y - 1)
     {
         bb[i * N_Y + j].x = 0.0;
+        bb[i * N_Y + j].m = aa[i * N_Y + j].m;
     }
+    
 }
 
 [numthreads(1, 1, 1)]
