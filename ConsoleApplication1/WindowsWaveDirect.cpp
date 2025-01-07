@@ -274,12 +274,63 @@ void WindowsWaveDirect::RunKernel() {
 
     deviceContext->Dispatch(N_X, N_Y, 1);
 
+    //2
+
+    deviceContext->CSSetShader(computeShader2, NULL, 0);
+    deviceContext->CSSetUnorderedAccessViews(0, 1, &bbUAV, NULL);
+    deviceContext->CSSetUnorderedAccessViews(1, 1, &clUAV, NULL);
+
+    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
+
+    deviceContext->Dispatch(N_X, N_Y, 1);
+
+    //3
+
+    deviceContext->CSSetShader(computeShader2, NULL, 0);
+    deviceContext->CSSetUnorderedAccessViews(0, 1, &clUAV, NULL);
+    deviceContext->CSSetUnorderedAccessViews(1, 1, &vertexUAV, NULL);
+
+    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
+
+    deviceContext->Dispatch(N_X, N_Y, 1);
+
+
+
     // Swap buffers
     std::swap(aaUAV, bbUAV);
 
 
 	//odczytanie danych z bufora
 
+    ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, vertexBuffer);
+
+    deviceContext->CopyResource(stagingBuffer, vertexBuffer);
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    if (SUCCEEDED(hr))
+    {
+        // Uzyskaj wskaünik do danych
+        float* dane = reinterpret_cast<float*>(mappedResource.pData);
+        //Punkt[] dane = (Punkt[])mappedResource.pData;
+
+
+        // Przetwarzaj dane
+        // ...
+		for (int i = 0; i < N_X; i++)
+		{
+			std::cout << dane[i] << std::endl;
+		}   
+        // Odmapuj bufor
+        deviceContext->Unmap(stagingBuffer, 0);
+    }
+    else
+    {
+        // Obs≥uga b≥Ídu
+    }
+
+
+    /*
     ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, bbBuffer);
 
     deviceContext->CopyResource(stagingBuffer, bbBuffer);
@@ -304,7 +355,7 @@ void WindowsWaveDirect::RunKernel() {
         // Obs≥uga b≥Ídu
     }
 
-
+    */
 	int i = 0;  
 }
 
