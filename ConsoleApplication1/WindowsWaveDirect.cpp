@@ -277,28 +277,21 @@ void WindowsWaveDirect::RunKernel() {
     // Swap buffers
     std::swap(aaUAV, bbUAV);
 
-    ID3D11Buffer* stagingBuffer = nullptr;
-    D3D11_BUFFER_DESC bufferDesc = {};
-    bufferDesc.Usage = D3D11_USAGE_STAGING;
-    bufferDesc.ByteWidth = sizeof(Punkt) * N_X*N_Y; // Zastπp TwojeDane odpowiedniπ strukturπ danych
-    bufferDesc.BindFlags = 0;
-    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-    HRESULT hr = device->CreateBuffer(&bufferDesc, nullptr, &stagingBuffer);
-    if (FAILED(hr))
-    {
-        // Obs≥uga b≥Ídu
-		int i = 0;
-    }
+	//odczytanie danych z bufora
+
+    ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, bbBuffer);
 
     deviceContext->CopyResource(stagingBuffer, bbBuffer);
 
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    HRESULT hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
     if (SUCCEEDED(hr))
     {
         // Uzyskaj wskaünik do danych
-        Punkt* dane = reinterpret_cast<Punkt*>(mappedResource.pData);
+        Punkt * dane = reinterpret_cast<Punkt*>(mappedResource.pData);
+        //Punkt[] dane = (Punkt[])mappedResource.pData;
+
 
         // Przetwarzaj dane
         // ...
@@ -390,4 +383,20 @@ ID3D11Buffer* WindowsWaveDirect::CreateAndCopyToDebugBuf(ID3D11Device* pDevice, 
     }
 
     return debugbuf;
+
+    /*
+ID3D11Buffer* stagingBuffer = nullptr;
+D3D11_BUFFER_DESC bufferDesc = {};
+bufferDesc.Usage = D3D11_USAGE_STAGING;
+bufferDesc.ByteWidth = sizeof(Punkt) * N_X * N_Y; // Zastπp TwojeDane odpowiedniπ strukturπ danych
+bufferDesc.BindFlags = 0;
+bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+HRESULT hr = device->CreateBuffer(&bufferDesc, nullptr, &stagingBuffer);
+if (FAILED(hr))
+{
+    // Obs≥uga b≥Ídu
+    int i = 0;
+}
+*/
 }
