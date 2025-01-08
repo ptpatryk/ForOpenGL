@@ -7,6 +7,8 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+#include <fstream>
+#include <vector>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -23,6 +25,8 @@ Vertex vertices[] = {
     { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f) }   // Wierzcho³ek prawy dolny
 };
 
+ID3D11Device* device = nullptr;
+ID3D11DeviceContext* deviceContext = nullptr;
 
 // Funkcje pomocnicze do tworzenia urz¹dzenia i kontekstu DirectX
 HRESULT InitDevice(HWND hWnd, ID3D11Device** device, ID3D11DeviceContext** context, IDXGISwapChain** swapChain, ID3D11RenderTargetView** renderTargetView) {
@@ -139,12 +143,41 @@ void initX()
     ID3D11PixelShader* pixelShader = nullptr;
     ID3D11InputLayout* inputLayout = nullptr;
 
+    //koniecznie w destruktorze: vsBlob->Release();
+    ID3DBlob* vsBlobV = nullptr;
+    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "VS", "vs_5_0", 0, 0, &vsBlobV, nullptr);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+    hr = device->CreateVertexShader(vsBlobV->GetBufferPointer(), vsBlobV->GetBufferSize(), nullptr, &vertexShader);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+
+    ID3DBlob* vsBlobP = nullptr;
+    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlobP, nullptr);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+    hr = device->CreatePixelShader(vsBlobP->GetBufferPointer(), vsBlobV->GetBufferSize(), nullptr, &pixelShader);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+
     // Kompilacja i tworzenie shaderów
     // ... (kod do kompilacji shaderów)
 
-    (context*)->VSSetShader(vertexShader, nullptr, 0);
-    (context*)->PSSetShader(pixelShader, nullptr, 0);
-    (context*)->IASetInputLayout(inputLayout);
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+    //deviceContext->IASetInputLayout(inputLayout);
+
+    //utworzenie sta³ego bufora w shaderze
+    //context->VSSetConstantBuffers(0, 1, &constantBuffer); // Dla vertex shader
+    //context->PSSetConstantBuffers(0, 1, &constantBuffer); // Dla pixel shader
 
     //SprawdŸ, czy bufor sta³ych jest poprawnie ustawiony: Upewnij siê, ¿e bufor sta³ych jest poprawnie ustawiony i aktualizowany:
     struct ConstantBuffer {
@@ -166,7 +199,7 @@ void initX()
     ID3D11Buffer* constantBuffer = nullptr;
     device->CreateBuffer(&cbd, &initData, &constantBuffer);
 
-    context->VSSetConstantBuffers(0, 1, &constantBuffer);
+    deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 
 }
 
