@@ -222,7 +222,8 @@ void WindowsWaveDirect::InitDirectX() {
 
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
     //hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
@@ -295,13 +296,28 @@ void WindowsWaveDirect::InitDirectCompute() {
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
     CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &clNbo);
     //CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
-    CreateStructuredBuffer(device, sizeof(Vertex), 3, &vertices[0], &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
+    //CreateStructuredBuffer(device, sizeof(Vertex), 3, &vertices[0], &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
     CreateBufferUAV(device, bbBuffer, &bbUAV);
     CreateBufferUAV(device, clNbo, &clUAV);
-    CreateBufferUAV(device, vertexBuffer, &vertexUAV);
+    //CreateBufferUAV(device, vertexBuffer, &vertexUAV);
+
+    D3D11_BUFFER_DESC bd = {};
+bd.Usage = D3D11_USAGE_DEFAULT;
+bd.ByteWidth = sizeof(vertices);
+bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+bd.CPUAccessFlags = 0;
+
+D3D11_SUBRESOURCE_DATA initDataX = {};
+initDataX.pSysMem = vertices;
+
+ID3D11Buffer* vertexBuffer = nullptr;
+HRESULT hr = device->CreateBuffer(&bd, &initDataX, &vertexBuffer);
+if (FAILED(hr)) {
+    // Obs³uga b³êdów
+}
 
      
 //blok ustawiaj¹ce sta³e w buforze ////////////////////////
@@ -327,7 +343,7 @@ void WindowsWaveDirect::InitDirectCompute() {
     Constants constants = { 0.016f, 1.0f, 100, 100, 0.5f, 0.0f }; // Przyk³adowe wartoœci
     initData.pSysMem = &constants;
 
-    HRESULT hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
+    hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
     if (FAILED(hr))
     {
         // Obs³uga b³êdu
@@ -445,7 +461,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     //deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     //
     ////koniec ustawienia bufora indeksu wierzcho³ków
-    
+    //
     //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //deviceContext->IASetInputLayout(inputLayout);
 
