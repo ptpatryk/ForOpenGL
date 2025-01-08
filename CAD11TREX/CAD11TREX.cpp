@@ -4,9 +4,6 @@
 #include <windows.h>
 #include <tchar.h>
 
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
 #include <fstream>
 #include <vector>
 
@@ -27,10 +24,10 @@ Vertex vertices[] = {
 
 ID3D11Device* device = nullptr;
 ID3D11DeviceContext* deviceContext = nullptr;
+void initX();
 
 // Funkcje pomocnicze do tworzenia urz¹dzenia i kontekstu DirectX
-HRESULT InitDevice(HWND hWnd, ID3D11Device** device, ID3D11DeviceContext** context, IDXGISwapChain** swapChain, ID3D11RenderTargetView** renderTargetView) {
-    // Tworzenie urz¹dzenia i kontekstu DirectX
+HRESULT InitDevice(HWND hWnd, ID3D11Device** deviceG, ID3D11DeviceContext** context, IDXGISwapChain** swapChain, ID3D11RenderTargetView** renderTargetView) {
     DXGI_SWAP_CHAIN_DESC scd = {};
     scd.BufferCount = 1;
     scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -41,14 +38,13 @@ HRESULT InitDevice(HWND hWnd, ID3D11Device** device, ID3D11DeviceContext** conte
 
     HRESULT hr = D3D11CreateDeviceAndSwapChain(
         nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0,
-        D3D11_SDK_VERSION, &scd, swapChain, device, nullptr, context
+        D3D11_SDK_VERSION, &scd, swapChain, deviceG, nullptr, context
     );
 
     if (FAILED(hr)) {
         return hr;
     }
 
-    //korekty 6 linijek - SprawdŸ, czy ustawienia widoku renderowania s¹ poprawne: Upewnij siê, ¿e widok renderowania jest poprawnie ustawiony. Mo¿esz to zrobiæ, dodaj¹c kod do ustawienia widoku renderowania w funkcji InitDevice:
     D3D11_VIEWPORT viewport = {};
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
@@ -56,11 +52,17 @@ HRESULT InitDevice(HWND hWnd, ID3D11Device** device, ID3D11DeviceContext** conte
     viewport.Height = 600;
     (*context)->RSSetViewports(1, &viewport);
 
-    // Tworzenie widoku renderowania
     ID3D11Texture2D* backBuffer = nullptr;
-    (*swapChain)->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
-    (*device)->CreateRenderTargetView(backBuffer, nullptr, renderTargetView);
+    hr = (*swapChain)->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = (*deviceG)->CreateRenderTargetView(backBuffer, nullptr, renderTargetView);
     backBuffer->Release();
+    if (FAILED(hr)) {
+        return hr;
+    }
 
     (*context)->OMSetRenderTargets(1, renderTargetView, nullptr);
 
@@ -75,13 +77,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hWnd = CreateWindow(wc.lpszClassName, _T("Rysowanie trójk¹ta"), WS_OVERLAPPEDWINDOW, 100, 100, 800, 600, nullptr, nullptr, wc.hInstance, nullptr);
 
     // Inicjalizacja DirectX
-    ID3D11Device* device = nullptr;
-    ID3D11DeviceContext* context = nullptr;
+    //ID3D11Device* device = nullptr;
+    //ID3D11DeviceContext* context = nullptr;
     IDXGISwapChain* swapChain = nullptr;
     ID3D11RenderTargetView* renderTargetView = nullptr;
-    if (FAILED(InitDevice(hWnd, &device, &context, &swapChain, &renderTargetView))) {
+    if (FAILED(InitDevice(hWnd, &device, &deviceContext, &swapChain, &renderTargetView))) {
         return 0;
     }
+
+    initX();
 
     // Tworzenie bufora wierzcho³ków
     D3D11_BUFFER_DESC bd = {};
@@ -100,6 +104,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
+
     MSG msg = { 0 };
     while (msg.message != WM_QUIT) {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -109,16 +114,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         else {
             // Czyszczenie ekranu
             float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-            context->ClearRenderTargetView(renderTargetView, clearColor);
+            deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
 
             // Ustawianie bufora wierzcho³ków
             UINT stride = sizeof(Vertex);
             UINT offset = 0;
-            context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-            context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+            deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
             // Rysowanie trójk¹ta
-            context->Draw(3, 0);
+            deviceContext->Draw(3, 0);
 
             // Prezentacja
             swapChain->Present(0, 0);
@@ -129,7 +134,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     vertexBuffer->Release();
     renderTargetView->Release();
     swapChain->Release();
-    context->Release();
+    deviceContext->Release();
     device->Release();
     UnregisterClass(wc.lpszClassName, wc.hInstance);
 
@@ -144,36 +149,51 @@ void initX()
     ID3D11InputLayout* inputLayout = nullptr;
 
     //koniecznie w destruktorze: vsBlob->Release();
-    ID3DBlob* vsBlobV = nullptr;
-    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "VS", "vs_5_0", 0, 0, &vsBlobV, nullptr);
+    ID3DBlob* vsBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "VS", "vs_5_0", 0, 0, &vsBlob, nullptr);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
     }
 
-    hr = device->CreateVertexShader(vsBlobV->GetBufferPointer(), vsBlobV->GetBufferSize(), nullptr, &vertexShader);
+    hr = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
+        int tt = 3;
     }
 
-
-    ID3DBlob* vsBlobP = nullptr;
-    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlobP, nullptr);
+    ID3DBlob* psBlob = nullptr;
+    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "PS", "ps_5_0", 0, 0, &psBlob, nullptr);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
+        int yy = 3;
     }
 
-    hr = device->CreatePixelShader(vsBlobP->GetBufferPointer(), vsBlobV->GetBufferSize(), nullptr, &pixelShader);
+    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
+        int yy = 3;
     }
-
+    
 
     // Kompilacja i tworzenie shaderów
     // ... (kod do kompilacji shaderów)
 
     deviceContext->VSSetShader(vertexShader, nullptr, 0);
     deviceContext->PSSetShader(pixelShader, nullptr, 0);
-    //deviceContext->IASetInputLayout(inputLayout);
+
+
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+		int yy = 3;
+    }
+
+    deviceContext->IASetInputLayout(inputLayout);
 
     //utworzenie sta³ego bufora w shaderze
     //context->VSSetConstantBuffers(0, 1, &constantBuffer); // Dla vertex shader

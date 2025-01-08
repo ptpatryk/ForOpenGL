@@ -167,7 +167,7 @@ void WindowsWaveDirect::InitDirectX() {
     // Create render target view
     ID3D11Texture2D* backBuffer;
     swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
-    device->CreateRenderTargetView(backBuffer, NULL, &renderTargetView);
+    device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
     backBuffer->Release();
 
     deviceContext->OMSetRenderTargets(1, &renderTargetView, NULL);
@@ -181,6 +181,64 @@ void WindowsWaveDirect::InitDirectX() {
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
     deviceContext->RSSetViewports(1, &viewport);
+
+    //todo: teraz dodaje ³adowanie shaderów i czegoœ tam jeszcze -------------------------------------
+
+       //Upewnij siê, ¿e shadery s¹ kompilowane i ustawiane w kodzie:
+    ID3D11VertexShader* vertexShader = nullptr;
+    ID3D11PixelShader* pixelShader = nullptr;
+    ID3D11InputLayout* inputLayout = nullptr;
+
+    //koniecznie w destruktorze: vsBlob->Release();
+    ID3DBlob* vsBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+    hr = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int tt = 3;
+    }
+
+    ID3DBlob* psBlob = nullptr;
+    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, nullptr);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int yy = 3;
+    }
+
+    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int yy = 3;
+    }
+
+
+    // Kompilacja i tworzenie shaderów
+    // ... (kod do kompilacji shaderów)
+
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int yy = 3;
+    }
+
+    deviceContext->IASetInputLayout(inputLayout);
+
+
+
+
 }
 
 void WindowsWaveDirect::InitDirectCompute() {
@@ -251,6 +309,22 @@ void WindowsWaveDirect::InitDirectCompute() {
 
 }
 
+
+//wstawka z trójk¹tem -------------------------------------
+   // Wspó³rzêdne wierzcho³ków trójk¹ta
+struct XVertex {
+    DirectX::XMFLOAT3 position;
+};
+
+XVertex vertices[] = {
+    { DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f) },  // Wierzcho³ek górny
+    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f) }, // Wierzcho³ek lewy dolny
+    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f) }   // Wierzcho³ek prawy dolny
+};
+
+//koniec wstawki z trjk¹tem
+
+
 void WindowsWaveDirect::OnRenderFrame() {
 
     // Struktura wierzcho³ka
@@ -272,6 +346,9 @@ void WindowsWaveDirect::OnRenderFrame() {
     //ID3D11Buffer* vertexBuffer = this->vertexBuffer;
     //device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
 
+
+   
+    
     // Ustawienie bufora wierzcho³ków
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
@@ -292,6 +369,40 @@ void WindowsWaveDirect::OnRenderFrame() {
 
     swapChain->Present(1, 0);
    
+    //tu próbowa³em u¿yæ innego bufora
+    /*
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(vertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = vertices;
+
+    ID3D11Buffer* vertexBufferX = nullptr;
+    device->CreateBuffer(&bd, &initData, &vertexBufferX);
+
+    // Ustawienie bufora wierzcho³ków
+    UINT stride = sizeof(XVertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBufferX, &stride, &offset);
+
+    float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+
+
+    // Rysowanie trójk¹tów
+    //deviceContext->DrawIndexed(indexCount, 0, 0);
+    deviceContext->DrawIndexed(3, 0, 0);
+
+
+
+
+    // Render your scene here
+
+    swapChain->Present(1, 0);
+    */
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
