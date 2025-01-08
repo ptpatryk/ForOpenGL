@@ -185,9 +185,6 @@ void WindowsWaveDirect::InitDirectX() {
     //todo: teraz dodaje ³adowanie shaderów i czegoœ tam jeszcze -------------------------------------
 
        //Upewnij siê, ¿e shadery s¹ kompilowane i ustawiane w kodzie:
-    ID3D11VertexShader* vertexShader = nullptr;
-    ID3D11PixelShader* pixelShader = nullptr;
-    ID3D11InputLayout* inputLayout = nullptr;
 
     //koniecznie w destruktorze: vsBlob->Release();
     ID3DBlob* vsBlob = nullptr;
@@ -228,15 +225,38 @@ void WindowsWaveDirect::InitDirectX() {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
+    //hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
     hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
         int yy = 3;
     }
 
+    //todo: bez tej linijki to samo - nadal jeden punkt
     deviceContext->IASetInputLayout(inputLayout);
 
 
+    //macie¿ dla VS
+    struct ConstantBuffer {
+        DirectX::XMMATRIX WorldViewProjection;
+    };
+
+    ConstantBuffer cb;
+    cb.WorldViewProjection = DirectX::XMMatrixIdentity(); // Przyk³adowa macierz
+
+    D3D11_BUFFER_DESC cbd = {};
+    cbd.Usage = D3D11_USAGE_DEFAULT;
+    cbd.ByteWidth = sizeof(ConstantBuffer);
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = &cb;
+
+    ID3D11Buffer* constantBuffer = nullptr;
+    device->CreateBuffer(&cbd, &initData, &constantBuffer);
+
+    deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 
 
 }
@@ -247,6 +267,12 @@ void WindowsWaveDirect::InitDirectCompute() {
     //D3DCompileFromFile(L"compute_shader.hlsl", NULL, NULL, "CSMain", "cs_5_0", 0, 0, &csBlob, NULL);
     //device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), NULL, &computeShader);
     //csBlob->Release(); //TODO: co robi ta funkcja i czy powinienem jej u¿ywaæ?
+
+    Vertex vertices[] = {
+{ DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
+    };
 
     //ID3D11ComputeShader* computeShader1;
     ID3DBlob* csBlob1 = nullptr;
@@ -267,8 +293,9 @@ void WindowsWaveDirect::InitDirectCompute() {
     // Create buffers
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
-    CreateStructuredBuffer(device, sizeof(PunktNormal), N_X * N_Y, nullptr, &clNbo);
-    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
+    CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &clNbo);
+    //CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
+    CreateStructuredBuffer(device, sizeof(Vertex), 3, &vertices[0], &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
@@ -323,18 +350,6 @@ XVertex vertices[] = {
 };
 
 //koniec wstawki z trjk¹tem
-
-
-void WindowsWaveDirect::OnRenderFrame() {
-
-    // Struktura wierzcho³ka
-    struct Vertex {
-        DirectX::XMFLOAT3 Position;
-        DirectX::XMFLOAT3 Normal;
-    };
-
-    int vertexCount = N_X * N_Y;
-
     // Tworzenie bufora wierzcho³ków
     //D3D11_BUFFER_DESC vertexBufferDesc = {};
     //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -346,29 +361,115 @@ void WindowsWaveDirect::OnRenderFrame() {
     //ID3D11Buffer* vertexBuffer = this->vertexBuffer;
     //device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
 
+void WindowsWaveDirect::OnRenderFrame() {
 
-   
+    // Struktura wierzcho³ka
+
+    /*
+    Vertex vertices[] = {
+    { DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
+    };
+
+    
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(vertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = vertices;
+
+    ID3D11Buffer* vertexBufferX = nullptr;
+    HRESULT hr = device->CreateBuffer(&bd, &initData, &vertexBufferX);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBufferX, &stride, &offset);
+
+    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+    // Czyszczenie ekranu
+    float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+
+    // Ustawienie shaderów
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+    // Ustawienie input layout
+    deviceContext->IASetInputLayout(inputLayout);
+
+    // Rysowanie trójk¹ta
+    deviceContext->Draw(3, 0);
+
+    // Prezentacja
+    swapChain->Present(1, 0);
+
+    */
+
+
+    
+    int vertexCount = N_X * N_Y;
+ 
     
     // Ustawienie bufora wierzcho³ków
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
     deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+    
+    ////ustawienie bufora indeksów wierzcho³ków:
+    //UINT indices[] = { 0, 1, 2 };
+
+    //D3D11_BUFFER_DESC ibd = {};
+    //ibd.Usage = D3D11_USAGE_DEFAULT;
+    //ibd.ByteWidth = sizeof(indices);
+    //ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    //ibd.CPUAccessFlags = 0;
+
+    //D3D11_SUBRESOURCE_DATA iinitData = {};
+    //iinitData.pSysMem = indices;
+
+    //ID3D11Buffer* indexBuffer = nullptr;
+    //HRESULT hr = device->CreateBuffer(&ibd, &iinitData, &indexBuffer);
+    //if (FAILED(hr)) {
+    //    // Obs³uga b³êdów
+    //}
+
+    //deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    //
+    ////koniec ustawienia bufora indeksu wierzcho³ków
+    
+    //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //deviceContext->IASetInputLayout(inputLayout);
 
     float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
     deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
 
+   
+
+
 
     // Rysowanie trójk¹tów
     //deviceContext->DrawIndexed(indexCount, 0, 0);
-    deviceContext->DrawIndexed(3, 0, 0);
+   // deviceContext->DrawIndexed(3, 0, 0);
 
-
+    deviceContext->Draw(3, 0);
 
 
     // Render your scene here
 
     swapChain->Present(1, 0);
    
+
+
+
     //tu próbowa³em u¿yæ innego bufora
     /*
     D3D11_BUFFER_DESC bd = {};
@@ -406,7 +507,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
-    RunKernel();
+    //RunKernel();
     czas += dt;
 }
 
@@ -431,7 +532,7 @@ void WindowsWaveDirect::RunKernel() {
 
     //3
 
-    deviceContext->CSSetShader(computeShader2, NULL, 0);
+    deviceContext->CSSetShader(computeShader3, NULL, 0);
     deviceContext->CSSetUnorderedAccessViews(0, 1, &clUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &vertexUAV, NULL);
 

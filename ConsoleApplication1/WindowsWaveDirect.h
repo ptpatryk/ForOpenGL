@@ -38,7 +38,10 @@ private:
     ID3D11UnorderedAccessView* bbUAV = nullptr;
     ID3D11UnorderedAccessView* clUAV = nullptr;
     ID3D11UnorderedAccessView* vertexUAV = nullptr;
-    
+    ID3D11VertexShader* vertexShader = nullptr;
+    ID3D11PixelShader* pixelShader = nullptr;
+    ID3D11InputLayout* inputLayout = nullptr;
+
     ID3D11Buffer* constantBuffer = nullptr;
 
     ID3D11Buffer* CreateAndCopyToDebugBuf(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pd3dImmediateContext, _In_ ID3D11Buffer* pBuffer);
@@ -52,6 +55,12 @@ private:
     struct PunktNormal {
         float x, y, z, nx, ny, nz;
     };
+
+    struct Vertex {
+        DirectX::XMFLOAT3 Position;
+        DirectX::XMFLOAT3 Normal;
+    };
+
 
     Punkt* aa = nullptr;
     float czas = 0.0f;
