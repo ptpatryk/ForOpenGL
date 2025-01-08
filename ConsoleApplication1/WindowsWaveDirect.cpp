@@ -252,12 +252,46 @@ void WindowsWaveDirect::InitDirectCompute() {
 }
 
 void WindowsWaveDirect::OnRenderFrame() {
+
+    // Struktura wierzcho³ka
+    struct Vertex {
+        DirectX::XMFLOAT3 Position;
+        DirectX::XMFLOAT3 Normal;
+    };
+
+    int vertexCount = N_X * N_Y;
+
+    // Tworzenie bufora wierzcho³ków
+    //D3D11_BUFFER_DESC vertexBufferDesc = {};
+    //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    //vertexBufferDesc.ByteWidth = sizeof(Vertex) * vertexCount;
+    //vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    //vertexBufferDesc.CPUAccessFlags = 0;
+
+   
+    //ID3D11Buffer* vertexBuffer = this->vertexBuffer;
+    //device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+
+    // Ustawienie bufora wierzcho³ków
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+
     float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
     deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+
+
+    // Rysowanie trójk¹tów
+    //deviceContext->DrawIndexed(indexCount, 0, 0);
+    deviceContext->DrawIndexed(3, 0, 0);
+
+
+
 
     // Render your scene here
 
     swapChain->Present(1, 0);
+   
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
@@ -299,7 +333,7 @@ void WindowsWaveDirect::RunKernel() {
     // Swap buffers
     std::swap(aaUAV, bbUAV);
 
-
+    /*
 	//odczytanie danych z bufora
 
     ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, vertexBuffer);
@@ -328,7 +362,7 @@ void WindowsWaveDirect::RunKernel() {
     {
         // Obs³uga b³êdu
     }
-
+    */
 
     /*
     ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, bbBuffer);
