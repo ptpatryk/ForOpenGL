@@ -13,11 +13,17 @@ public:
     void Run();
 
 private:
-    void InitDirectX();
+    HRESULT InitDirectX();
     void InitDirectCompute();
     void OnRenderFrame();
     void OnUpdateFrame();
     void RunKernel();
+
+    HRESULT TworzenieBuforaGlebi();
+    HRESULT VPShaderTworz();
+    void UstawienieMaciezySwiata();
+    void UstawienieViewPort();
+    HRESULT TworzenieBuforaTylniego();
 
 	int width;
 	int height;

@@ -125,7 +125,12 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
     ShowWindow(hwnd, SW_SHOW);
 
     // Initialize DirectX
-    InitDirectX();
+    HRESULT hr = InitDirectX();
+    if (FAILED(hr))
+    {
+        int i = 4;
+    }
+
     InitDirectCompute();
 }
 
@@ -139,7 +144,7 @@ WindowsWaveDirect::~WindowsWaveDirect() {
     if (device) device->Release();
 }
 
-void WindowsWaveDirect::InitDirectX() {
+HRESULT WindowsWaveDirect::InitDirectX() {
     // Create device and swap chain
     DXGI_SWAP_CHAIN_DESC scd = {};
     scd.BufferCount = 1;
@@ -169,56 +174,44 @@ void WindowsWaveDirect::InitDirectX() {
         &deviceContext
     );
 
-    // Tworzenie zasobu bufora g³êbokoœci
-    ID3D11Texture2D* depthStencilBuffer = nullptr;
-    D3D11_TEXTURE2D_DESC depthStencilDesc = {};
-    depthStencilDesc.Width = width; // Szerokoœæ bufora
-    depthStencilDesc.Height = height; // Wysokoœæ bufora
-    depthStencilDesc.MipLevels = 1;
-    depthStencilDesc.ArraySize = 1;
-    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilDesc.SampleDesc.Count = 1;
-    depthStencilDesc.SampleDesc.Quality = 0;
-    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    depthStencilDesc.CPUAccessFlags = 0;
-    depthStencilDesc.MiscFlags = 0;
+    HRESULT hr;
 
-    HRESULT hr = device->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-		int i = 3;  
-    }
+    hr = TworzenieBuforaGlebi();
 
-    // Uzyskanie dostêpu do bufora tylnego
-    ID3D11Texture2D* backBuffer = nullptr;
-    hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-    }
-
-    hr = device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
-    backBuffer->Release();
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-    }
-
-
-    // Tworzenie widoku bufora g³êbokoœci
-    
-    hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-		int i = 3;
-    }
-
-    //swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&depthStencilBuffer);
-    //device->CreateRenderTargetView(depthStencilBuffer, nullptr, &renderTargetView);
+    hr = TworzenieBuforaTylniego();
 
     // Ustawianie widoku bufora g³êbokoœci na kontekœcie urz¹dzenia
     deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 
     // Set viewport
+    UstawienieViewPort();
+
+    hr = VPShaderTworz();
+
+    UstawienieMaciezySwiata();
+
+    return hr;
+}
+
+HRESULT WindowsWaveDirect::TworzenieBuforaTylniego()
+{
+    // Uzyskanie dostêpu do bufora tylnego
+    ID3D11Texture2D* backBuffer = nullptr;
+    HRESULT hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
+    //backBuffer->Release();
+    if (FAILED(hr)) {
+        return hr;
+    }
+    return hr;
+}
+
+void WindowsWaveDirect::UstawienieViewPort()
+{
     D3D11_VIEWPORT viewport = {};
     viewport.Width = (FLOAT)width;
     viewport.Height = (FLOAT)height;
@@ -228,61 +221,10 @@ void WindowsWaveDirect::InitDirectX() {
     viewport.TopLeftY = 0;
     deviceContext->RSSetViewports(1, &viewport);
 
-    //todo: teraz dodaje ³adowanie shaderów i czegoœ tam jeszcze -------------------------------------
+}
 
-       //Upewnij siê, ¿e shadery s¹ kompilowane i ustawiane w kodzie:
-
-    //koniecznie w destruktorze: vsBlob->Release();
-    ID3DBlob* vsBlob = nullptr;
-    hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-    }
-
-    hr = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-        int tt = 3;
-    }
-
-    ID3DBlob* psBlob = nullptr;
-    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, nullptr);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-        int yy = 3;
-    }
-
-    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-        int yy = 3;
-    }
-
-
-    // Kompilacja i tworzenie shaderów
-    // ... (kod do kompilacji shaderów)
-
-    deviceContext->VSSetShader(vertexShader, nullptr, 0);
-    deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-
-
-    D3D11_INPUT_ELEMENT_DESC layout[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-
-    //hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
-    hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
-    if (FAILED(hr)) {
-        // Obs³uga b³êdów
-        int yy = 3;
-    }
-
-    //todo: bez tej linijki to samo - nadal jeden punkt
-    deviceContext->IASetInputLayout(inputLayout);
-
-
+void WindowsWaveDirect::UstawienieMaciezySwiata()
+{
     //macie¿ dla VS
     struct ConstantBuffer {
         DirectX::XMMATRIX WorldViewProjection;
@@ -304,8 +246,94 @@ void WindowsWaveDirect::InitDirectX() {
     device->CreateBuffer(&cbd, &initData, &constantBuffer);
 
     deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+}
+
+HRESULT WindowsWaveDirect::VPShaderTworz()
+{
+    //koniecznie w destruktorze: vsBlob->Release();
+    ID3DBlob* vsBlob = nullptr;
+    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    ID3DBlob* psBlob = nullptr;
+    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, nullptr);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+    //Layout wyjœciowy:
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+     { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    //hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+    hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        return hr;
+    }
+
+    //todo: bez tej linijki to samo - nadal jeden punkt
+    deviceContext->IASetInputLayout(inputLayout);
 
 
+    return hr;
+
+}
+
+HRESULT WindowsWaveDirect::TworzenieBuforaGlebi()
+{
+    // Tworzenie zasobu bufora g³êbokoœci
+    ID3D11Texture2D* depthStencilBuffer = nullptr;
+    D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+    depthStencilDesc.Width = width; // Szerokoœæ bufora
+    depthStencilDesc.Height = height; // Wysokoœæ bufora
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.CPUAccessFlags = 0;
+    depthStencilDesc.MiscFlags = 0;
+
+    HRESULT hr = device->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int i = 3;
+    }
+    else {
+        hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+        if (FAILED(hr)) {
+            // Obs³uga b³êdów
+            int i = 3;
+        }
+    }
+
+    //nie wiem czy to coœ potrzebne - z odkomentowanego kodu
+    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&depthStencilBuffer);
+    device->CreateRenderTargetView(depthStencilBuffer, nullptr, &renderTargetView);
+
+
+    return hr;
 }
 
 void WindowsWaveDirect::InitDirectCompute() {
