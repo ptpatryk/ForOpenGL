@@ -140,6 +140,7 @@
     <ClCompile Include="Source2.cpp" />
     <ClCompile Include="WindowsWave.cpp" />
     <ClCompile Include="WindowsWaveDirect.cpp" />
+    <ClCompile Include="WindowsWaveDirect.utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl" />

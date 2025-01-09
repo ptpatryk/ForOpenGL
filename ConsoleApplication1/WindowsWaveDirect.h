@@ -24,7 +24,12 @@ private:
     void UstawienieMaciezySwiata();
     void UstawienieViewPort();
     HRESULT TworzenieBuforaTylniego();
+    HRESULT UzupelnienieBuforuTrojkatem();
 
+    //funkcje pom
+    HRESULT CreateStructuredBuffer(ID3D11Device* pDevice, UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBufOut);
+    HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11UnorderedAccessView** ppUAVOut);
+    
 	int width;
 	int height;
 

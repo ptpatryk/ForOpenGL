@@ -1,5 +1,6 @@
 #include "WindowsWaveDirect.h"
-
+//#include "WindowsWaveDirect.utility.cpp"
+//
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -24,67 +25,6 @@ LRESULT CALLBACK WindowProcFor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
-//--------------------------------------------------------------------------------------
-// Create Structured Buffer
-//--------------------------------------------------------------------------------------
-_Use_decl_annotations_
-HRESULT CreateStructuredBuffer(ID3D11Device* pDevice, UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBufOut)
-{
-    *ppBufOut = nullptr;
-
-    D3D11_BUFFER_DESC desc = {};
-    desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-    desc.ByteWidth = uElementSize * uCount;
-    desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    desc.StructureByteStride = uElementSize;
-
-    if (pInitData)
-    {
-        D3D11_SUBRESOURCE_DATA InitData;
-        InitData.pSysMem = pInitData;
-        return pDevice->CreateBuffer(&desc, &InitData, ppBufOut);
-    }
-    else
-        return pDevice->CreateBuffer(&desc, nullptr, ppBufOut);
-}
-//--------------------------------------------------------------------------------------
-// Create Unordered Access View for Structured or Raw Buffers
-//-------------------------------------------------------------------------------------- 
-_Use_decl_annotations_
-HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11UnorderedAccessView** ppUAVOut)
-{
-    D3D11_BUFFER_DESC descBuf = {};
-    pBuffer->GetDesc(&descBuf);
-
-    D3D11_UNORDERED_ACCESS_VIEW_DESC desc = {};
-    desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-    desc.Buffer.FirstElement = 0;
-
-    if (descBuf.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
-    {
-        // This is a Raw Buffer
-
-        desc.Format = DXGI_FORMAT_R32_TYPELESS; // Format must be DXGI_FORMAT_R32_TYPELESS, when creating Raw Unordered Access View
-        desc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
-        desc.Buffer.NumElements = descBuf.ByteWidth / 4;
-    }
-    else
-        if (descBuf.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
-        {
-            // This is a Structured Buffer
-
-            desc.Format = DXGI_FORMAT_UNKNOWN;      // Format must be must be DXGI_FORMAT_UNKNOWN, when creating a View of a Structured Buffer
-            desc.Buffer.NumElements = descBuf.ByteWidth / descBuf.StructureByteStride;
-        }
-        else
-        {
-            return E_INVALIDARG;
-        }
-
-    return pDevice->CreateUnorderedAccessView(pBuffer, &desc, ppUAVOut);
-}
-
 
 WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& title) {
     // Register the window class
@@ -131,7 +71,8 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
         int i = 4;
     }
 
-    InitDirectCompute();
+    UzupelnienieBuforuTrojkatem();
+    //InitDirectCompute();
 }
 
 
@@ -192,6 +133,32 @@ HRESULT WindowsWaveDirect::InitDirectX() {
 
     return hr;
 }
+
+HRESULT WindowsWaveDirect::UzupelnienieBuforuTrojkatem()
+{
+    Vertex vertices[] = {
+{ DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
+    };
+
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(vertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initDataX = {};
+    initDataX.pSysMem = vertices;
+
+    //ID3D11Buffer* vertexBuffer = nullptr;
+    HRESULT hr = device->CreateBuffer(&bd, &initDataX, &vertexBuffer);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    return hr;
+}
+
 
 HRESULT WindowsWaveDirect::TworzenieBuforaTylniego()
 {
@@ -343,11 +310,6 @@ void WindowsWaveDirect::InitDirectCompute() {
     //device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), NULL, &computeShader);
     //csBlob->Release(); //TODO: co robi ta funkcja i czy powinienem jej u¿ywaæ?
 
-    Vertex vertices[] = {
-{ DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
-{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
-{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
-    };
 
     //ID3D11ComputeShader* computeShader1;
     ID3DBlob* csBlob1 = nullptr;
@@ -369,30 +331,16 @@ void WindowsWaveDirect::InitDirectCompute() {
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
     CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &clNbo);
-    //CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
-    //CreateStructuredBuffer(device, sizeof(Vertex), 3, &vertices[0], &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36
+    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36 -- zamiast tego bufora zrobiæ rysowanie po indeksach
+    
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
     CreateBufferUAV(device, bbBuffer, &bbUAV);
     CreateBufferUAV(device, clNbo, &clUAV);
-    //CreateBufferUAV(device, vertexBuffer, &vertexUAV);
+    CreateBufferUAV(device, vertexBuffer, &vertexUAV);
 
-    D3D11_BUFFER_DESC bd = {};
-bd.Usage = D3D11_USAGE_DEFAULT;
-bd.ByteWidth = sizeof(vertices);
-bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-bd.CPUAccessFlags = 0;
-
-D3D11_SUBRESOURCE_DATA initDataX = {};
-initDataX.pSysMem = vertices;
-
-ID3D11Buffer* vertexBuffer = nullptr;
-HRESULT hr = device->CreateBuffer(&bd, &initDataX, &vertexBuffer);
-if (FAILED(hr)) {
-    // Obs³uga b³êdów
-}
-
+   
      
 //blok ustawiaj¹ce sta³e w buforze ////////////////////////
 
@@ -417,7 +365,7 @@ if (FAILED(hr)) {
     Constants constants = { 0.016f, 1.0f, 100, 100, 0.5f, 0.0f }; // Przyk³adowe wartoœci
     initData.pSysMem = &constants;
 
-    hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
+    HRESULT hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
     if (FAILED(hr))
     {
         // Obs³uga b³êdu
@@ -470,7 +418,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     deviceContext->IASetInputLayout(inputLayout);
 
     // Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
-    //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // Rysowanie prymitywów
     //deviceContext->Draw(N_X * N_Y * 36, 0);
@@ -723,43 +671,7 @@ void WindowsWaveDirect::RunKernel() {
 	int i = 0;  
 }
 
-//--------------------------------------------------------------------------------------
-// Run CS
-//-------------------------------------------------------------------------------------- 
-_Use_decl_annotations_
-void RunComputeShader(ID3D11DeviceContext* pd3dImmediateContext,
-    ID3D11ComputeShader* pComputeShader,
-    UINT nNumViews, ID3D11ShaderResourceView** pShaderResourceViews,
-    ID3D11Buffer* pCBCS, void* pCSData, DWORD dwNumDataBytes,
-    ID3D11UnorderedAccessView* pUnorderedAccessView,
-    UINT X, UINT Y, UINT Z)
-{
-    pd3dImmediateContext->CSSetShader(pComputeShader, nullptr, 0);
-    pd3dImmediateContext->CSSetShaderResources(0, nNumViews, pShaderResourceViews);
-    pd3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pUnorderedAccessView, nullptr);
-    if (pCBCS && pCSData)
-    {
-        D3D11_MAPPED_SUBRESOURCE MappedResource;
-        pd3dImmediateContext->Map(pCBCS, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-        memcpy(MappedResource.pData, pCSData, dwNumDataBytes);
-        pd3dImmediateContext->Unmap(pCBCS, 0);
-        ID3D11Buffer* ppCB[1] = { pCBCS };
-        pd3dImmediateContext->CSSetConstantBuffers(0, 1, ppCB);
-    }
 
-    pd3dImmediateContext->Dispatch(X, Y, Z);
-
-    pd3dImmediateContext->CSSetShader(nullptr, nullptr, 0);
-
-    ID3D11UnorderedAccessView* ppUAViewnullptr[1] = { nullptr };
-    pd3dImmediateContext->CSSetUnorderedAccessViews(0, 1, ppUAViewnullptr, nullptr);
-
-    ID3D11ShaderResourceView* ppSRVnullptr[2] = { nullptr, nullptr };
-    pd3dImmediateContext->CSSetShaderResources(0, 2, ppSRVnullptr);
-
-    ID3D11Buffer* ppCBnullptr[1] = { nullptr };
-    pd3dImmediateContext->CSSetConstantBuffers(0, 1, ppCBnullptr);
-}
 
 void WindowsWaveDirect::Run() {
     MSG msg = {};
@@ -775,43 +687,3 @@ void WindowsWaveDirect::Run() {
     }
 }
 
-//--------------------------------------------------------------------------------------
-// Create a CPU accessible buffer and download the content of a GPU buffer into it
-// This function is very useful for debugging CS programs
-//-------------------------------------------------------------------------------------- 
-_Use_decl_annotations_
-ID3D11Buffer* WindowsWaveDirect::CreateAndCopyToDebugBuf(ID3D11Device* pDevice, ID3D11DeviceContext* pd3dImmediateContext, ID3D11Buffer* pBuffer)
-{
-    ID3D11Buffer* debugbuf = nullptr;
-
-    D3D11_BUFFER_DESC desc = {};
-    pBuffer->GetDesc(&desc);
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    desc.Usage = D3D11_USAGE_STAGING;
-    desc.BindFlags = 0;
-    desc.MiscFlags = 0;
-    if (SUCCEEDED(pDevice->CreateBuffer(&desc, nullptr, &debugbuf)))
-    {
-
-
-        pd3dImmediateContext->CopyResource(debugbuf, pBuffer);
-    }
-
-    return debugbuf;
-
-    /*
-ID3D11Buffer* stagingBuffer = nullptr;
-D3D11_BUFFER_DESC bufferDesc = {};
-bufferDesc.Usage = D3D11_USAGE_STAGING;
-bufferDesc.ByteWidth = sizeof(Punkt) * N_X * N_Y; // Zast¹p TwojeDane odpowiedni¹ struktur¹ danych
-bufferDesc.BindFlags = 0;
-bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-
-HRESULT hr = device->CreateBuffer(&bufferDesc, nullptr, &stagingBuffer);
-if (FAILED(hr))
-{
-    // Obs³uga b³êdu
-    int i = 0;
-}
-*/
-}
