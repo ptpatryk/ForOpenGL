@@ -89,16 +89,16 @@ HRESULT WindowsWaveDirect::InitDirectX() {
     // Create device and swap chain
     DXGI_SWAP_CHAIN_DESC scd = {};
     scd.BufferCount = 1;
-    scd.BufferDesc.Width = width; // Szerokoœæ okna
-    scd.BufferDesc.Height = height; // Wysokoœæ okna
+    //scd.BufferDesc.Width = width; // Szerokoœæ okna
+    //scd.BufferDesc.Height = height; // Wysokoœæ okna
     scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     scd.OutputWindow = hwnd;
     scd.SampleDesc.Count = 1;
-    scd.SampleDesc.Quality = 0;
+    //scd.SampleDesc.Quality = 0;
     scd.Windowed = TRUE;
-    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    scd.Flags = 0;
+    //scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    //scd.Flags = 0;
 
     D3D11CreateDeviceAndSwapChain(
         NULL,
@@ -117,15 +117,20 @@ HRESULT WindowsWaveDirect::InitDirectX() {
 
     HRESULT hr;
 
-    hr = TworzenieBuforaGlebi();
+    //hr = TworzenieBuforaGlebi();
 
-    hr = TworzenieBuforaTylniego();
+    //hr = TworzenieBuforaTylniego();
 
+     // Create render target view
+    ID3D11Texture2D * backBuffer;
+    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+    device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
+    backBuffer->Release();
     // Ustawianie widoku bufora g³êbokoœci na kontekœcie urz¹dzenia
-    deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-
+    //deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+    deviceContext->OMSetRenderTargets(1, &renderTargetView, NULL);
     // Set viewport
-    UstawienieViewPort();
+    //UstawienieViewPort();
 
     hr = VPShaderTworz();
 
@@ -401,7 +406,7 @@ void WindowsWaveDirect::InitDirectCompute() {
 
 void WindowsWaveDirect::OnRenderFrame() {
 
-
+    /*
     // Czyszczenie ekranu
     float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
     deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
@@ -427,7 +432,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     // Prezentacja
     swapChain->Present(0, 0);
 
-
+    */
     // Struktura wierzcho³ka
 
     /*
@@ -480,7 +485,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     */
 
 
-    /*
+    
      float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
     deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
     int vertexCount = N_X * N_Y;
@@ -534,7 +539,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     swapChain->Present(1, 0);
    
 
-    */
+    
 
     //tu próbowa³em u¿yæ innego bufora
     /*
