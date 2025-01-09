@@ -7,7 +7,10 @@
 #include <GL/glew.h>
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
-
+#include <GL/glut.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class WindowsWave {
 public:

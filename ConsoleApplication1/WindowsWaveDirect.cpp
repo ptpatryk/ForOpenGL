@@ -353,19 +353,19 @@ if (FAILED(hr)) {
 }
 
 
-//wstawka z trójk¹tem -------------------------------------
-   // Wspó³rzêdne wierzcho³ków trójk¹ta
-struct XVertex {
-    DirectX::XMFLOAT3 position;
-};
-
-XVertex vertices[] = {
-    { DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f) },  // Wierzcho³ek górny
-    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f) }, // Wierzcho³ek lewy dolny
-    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f) }   // Wierzcho³ek prawy dolny
-};
-
-//koniec wstawki z trjk¹tem
+////wstawka z trójk¹tem -------------------------------------
+//   // Wspó³rzêdne wierzcho³ków trójk¹ta
+//struct XVertex {
+//    DirectX::XMFLOAT3 position;
+//};
+//
+//XVertex vertices[] = {
+//    { DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f) },  // Wierzcho³ek górny
+//    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f) }, // Wierzcho³ek lewy dolny
+//    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f) }   // Wierzcho³ek prawy dolny
+//};
+//
+////koniec wstawki z trjk¹tem
     // Tworzenie bufora wierzcho³ków
     //D3D11_BUFFER_DESC vertexBufferDesc = {};
     //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -431,7 +431,8 @@ void WindowsWaveDirect::OnRenderFrame() {
     */
 
 
-    
+     float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
     int vertexCount = N_X * N_Y;
  
     
@@ -462,11 +463,10 @@ void WindowsWaveDirect::OnRenderFrame() {
     //
     ////koniec ustawienia bufora indeksu wierzcho³ków
     //
-    //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    //deviceContext->IASetInputLayout(inputLayout);
+    /*deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    deviceContext->IASetInputLayout(inputLayout);*/
 
-    float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+   
 
    
 
