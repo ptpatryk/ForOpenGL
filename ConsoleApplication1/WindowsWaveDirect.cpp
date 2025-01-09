@@ -379,6 +379,33 @@ if (FAILED(hr)) {
 
 void WindowsWaveDirect::OnRenderFrame() {
 
+
+    // Czyszczenie ekranu
+    float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+    deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+    // Ustawianie shaderów
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+    // Ustawianie bufora wierzcho³ków i layoutu wejœciowego
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+    deviceContext->IASetInputLayout(inputLayout);
+
+    // Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
+    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // Rysowanie prymitywów
+    //deviceContext->Draw(N_X * N_Y * 36, 0);
+    deviceContext->Draw(3, 0);
+
+    // Prezentacja
+    swapChain->Present(0, 0);
+
+
     // Struktura wierzcho³ka
 
     /*
@@ -431,6 +458,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     */
 
 
+    /*
      float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
     deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
     int vertexCount = N_X * N_Y;
@@ -463,8 +491,8 @@ void WindowsWaveDirect::OnRenderFrame() {
     //
     ////koniec ustawienia bufora indeksu wierzcho³ków
     //
-    /*deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    deviceContext->IASetInputLayout(inputLayout);*/
+    //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //deviceContext->IASetInputLayout(inputLayout);
 
    
 
@@ -484,7 +512,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     swapChain->Present(1, 0);
    
 
-
+    */
 
     //tu próbowa³em u¿yæ innego bufora
     /*
