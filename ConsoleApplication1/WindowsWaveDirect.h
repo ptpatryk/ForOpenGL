@@ -46,6 +46,8 @@ private:
 
     ID3D11Buffer* CreateAndCopyToDebugBuf(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pd3dImmediateContext, _In_ ID3D11Buffer* pBuffer);
 
+    ID3D11DepthStencilView* depthStencilView = nullptr;
+
     struct Punkt {
         float m;
         float v;

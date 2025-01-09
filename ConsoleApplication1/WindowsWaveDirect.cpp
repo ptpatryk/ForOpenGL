@@ -143,11 +143,16 @@ void WindowsWaveDirect::InitDirectX() {
     // Create device and swap chain
     DXGI_SWAP_CHAIN_DESC scd = {};
     scd.BufferCount = 1;
+    scd.BufferDesc.Width = width; // Szerokoœæ okna
+    scd.BufferDesc.Height = height; // Wysokoœæ okna
     scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     scd.OutputWindow = hwnd;
     scd.SampleDesc.Count = 1;
+    scd.SampleDesc.Quality = 0;
     scd.Windowed = TRUE;
+    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    scd.Flags = 0;
 
     D3D11CreateDeviceAndSwapChain(
         NULL,
@@ -164,13 +169,54 @@ void WindowsWaveDirect::InitDirectX() {
         &deviceContext
     );
 
-    // Create render target view
-    ID3D11Texture2D* backBuffer;
-    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
-    device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
-    backBuffer->Release();
+    // Tworzenie zasobu bufora g³êbokoœci
+    ID3D11Texture2D* depthStencilBuffer = nullptr;
+    D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+    depthStencilDesc.Width = width; // Szerokoœæ bufora
+    depthStencilDesc.Height = height; // Wysokoœæ bufora
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.CPUAccessFlags = 0;
+    depthStencilDesc.MiscFlags = 0;
 
-    deviceContext->OMSetRenderTargets(1, &renderTargetView, NULL);
+    HRESULT hr = device->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+		int i = 3;  
+    }
+
+    // Uzyskanie dostêpu do bufora tylnego
+    ID3D11Texture2D* backBuffer = nullptr;
+    hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+    hr = device->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
+    backBuffer->Release();
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
+
+
+    // Tworzenie widoku bufora g³êbokoœci
+    
+    hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+		int i = 3;
+    }
+
+    //swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&depthStencilBuffer);
+    //device->CreateRenderTargetView(depthStencilBuffer, nullptr, &renderTargetView);
+
+    // Ustawianie widoku bufora g³êbokoœci na kontekœcie urz¹dzenia
+    deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 
     // Set viewport
     D3D11_VIEWPORT viewport = {};
@@ -188,7 +234,7 @@ void WindowsWaveDirect::InitDirectX() {
 
     //koniecznie w destruktorze: vsBlob->Release();
     ID3DBlob* vsBlob = nullptr;
-    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
+    hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
     if (FAILED(hr)) {
         // Obs³uga b³êdów
     }
@@ -396,7 +442,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     deviceContext->IASetInputLayout(inputLayout);
 
     // Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
-    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // Rysowanie prymitywów
     //deviceContext->Draw(N_X * N_Y * 36, 0);
