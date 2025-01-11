@@ -148,6 +148,7 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="packages.config" />
+    <None Include="Tutorial06.fxh" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>

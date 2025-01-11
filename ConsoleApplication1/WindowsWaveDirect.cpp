@@ -76,6 +76,22 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
 }
 
 
+void przygotujIndeksy(std::vector<WORD>& indices, int N_X, int N_Y) {
+    for (int i = 0; i < N_Y - 1; ++i) {
+        for (int j = 0; j < N_X - 1; ++j) {
+            // First triangle
+            indices.push_back(i * N_Y + j);
+            indices.push_back(i * N_Y + (j + 1));
+            indices.push_back((i + 1) * N_Y + j);
+
+            // Second triangle
+            indices.push_back((i + 1) * N_Y + j);
+            indices.push_back(i * N_Y + (j + 1));
+            indices.push_back((i + 1) * N_Y + (j + 1));
+        }
+    }
+}
+
 WindowsWaveDirect::~WindowsWaveDirect() {
     // Clean up DirectX resources
     if (deviceContext) deviceContext->ClearState();
@@ -309,14 +325,6 @@ HRESULT WindowsWaveDirect::TworzenieBuforaGlebi()
 }
 
 void WindowsWaveDirect::InitDirectCompute() {
-    // Create compute shader
-    //ID3DBlob* csBlob = nullptr;
-    //D3DCompileFromFile(L"compute_shader.hlsl", NULL, NULL, "CSMain", "cs_5_0", 0, 0, &csBlob, NULL);
-    //device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), NULL, &computeShader);
-    //csBlob->Release(); //TODO: co robi ta funkcja i czy powinienem jej u¿ywaæ?
-
-
-    //ID3D11ComputeShader* computeShader1;
     ID3DBlob* csBlob1 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "obliczWspolrzedne", "cs_5_0", 0, 0, &csBlob1, nullptr);
     device->CreateComputeShader(csBlob1->GetBufferPointer(), csBlob1->GetBufferSize(), nullptr, &computeShader1);
@@ -326,26 +334,19 @@ void WindowsWaveDirect::InitDirectCompute() {
     ID3DBlob* csBlob2 = nullptr;
     D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "obliczNormalne", "cs_5_0", 0, 0, &csBlob2, nullptr);
     device->CreateComputeShader(csBlob2->GetBufferPointer(), csBlob2->GetBufferSize(), nullptr, &computeShader2);
-
-    //ID3D11ComputeShader* computeShader3;
-    ID3DBlob* csBlob3 = nullptr;
-    D3DCompileFromFile(L"ComputeShader.hlsl", nullptr, nullptr, "przygotujTrojkaty", "cs_5_0", 0, 0, &csBlob3, nullptr);
-    device->CreateComputeShader(csBlob3->GetBufferPointer(), csBlob3->GetBufferSize(), nullptr, &computeShader3);
+	csBlob2->Release();
 
     // Create buffers
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
     CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &clNbo);
-    CreateStructuredBuffer(device, sizeof(float), N_X * N_Y * 36, nullptr, &vertexBuffer);  //nie jestem pewien czy ma byæ ich razy 36 -- zamiast tego bufora zrobiæ rysowanie po indeksach
     
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
     CreateBufferUAV(device, bbBuffer, &bbUAV);
     CreateBufferUAV(device, clNbo, &clUAV);
-    CreateBufferUAV(device, vertexBuffer, &vertexUAV);
-
-   
+ 
      
 //blok ustawiaj¹ce sta³e w buforze ////////////////////////
 
@@ -379,30 +380,6 @@ void WindowsWaveDirect::InitDirectCompute() {
 
 }
 
-
-////wstawka z trójk¹tem -------------------------------------
-//   // Wspó³rzêdne wierzcho³ków trójk¹ta
-//struct XVertex {
-//    DirectX::XMFLOAT3 position;
-//};
-//
-//XVertex vertices[] = {
-//    { DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f) },  // Wierzcho³ek górny
-//    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f) }, // Wierzcho³ek lewy dolny
-//    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f) }   // Wierzcho³ek prawy dolny
-//};
-//
-////koniec wstawki z trjk¹tem
-    // Tworzenie bufora wierzcho³ków
-    //D3D11_BUFFER_DESC vertexBufferDesc = {};
-    //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    //vertexBufferDesc.ByteWidth = sizeof(Vertex) * vertexCount;
-    //vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    //vertexBufferDesc.CPUAccessFlags = 0;
-
-   
-    //ID3D11Buffer* vertexBuffer = this->vertexBuffer;
-    //device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
 
 void WindowsWaveDirect::OnRenderFrame() {
 
@@ -498,26 +475,37 @@ void WindowsWaveDirect::OnRenderFrame() {
     
     ////ustawienie bufora indeksów wierzcho³ków:
     //UINT indices[] = { 0, 1, 2 };
+        //przyk³ad u¿ycia od ai
+    std::vector<WORD> indices;
+    przygotujIndeksy(indices, N_X, N_Y);  //todo: to w innym miejscu
 
-    //D3D11_BUFFER_DESC ibd = {};
-    //ibd.Usage = D3D11_USAGE_DEFAULT;
-    //ibd.ByteWidth = sizeof(indices);
-    //ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    //ibd.CPUAccessFlags = 0;
+    // Print indices for verification
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        std::cout << "Triangle " << i / 3 << ": ";
+        std::cout << indices[i] << ", " << indices[i + 1] << ", " << indices[i + 2] << std::endl;
+    }
+   
+    D3D11_BUFFER_DESC ibd = {};
+    ibd.Usage = D3D11_USAGE_DEFAULT;
+    ibd.ByteWidth = static_cast<UINT>(indices.size() * sizeof(WORD)); // Poprawione 
+    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibd.CPUAccessFlags = 0;
 
-    //D3D11_SUBRESOURCE_DATA iinitData = {};
-    //iinitData.pSysMem = indices;
+    D3D11_SUBRESOURCE_DATA iinitData = {};
+    iinitData.pSysMem = indices.data(); // Poprawione przekazanie danych
 
-    //ID3D11Buffer* indexBuffer = nullptr;
-    //HRESULT hr = device->CreateBuffer(&ibd, &iinitData, &indexBuffer);
-    //if (FAILED(hr)) {
-    //    // Obs³uga b³êdów
-    //}
+    ID3D11Buffer* indexBuffer = nullptr;
+    HRESULT hr = device->CreateBuffer(&ibd, &iinitData, &indexBuffer);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+    }
 
-    //deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    //
-    ////koniec ustawienia bufora indeksu wierzcho³ków
-    //
+	
+
+    deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    
+    //koniec ustawienia bufora indeksu wierzcho³ków
+    
     //deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //deviceContext->IASetInputLayout(inputLayout);
 
@@ -600,17 +588,6 @@ void WindowsWaveDirect::RunKernel() {
     deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
 
     deviceContext->Dispatch(N_X, N_Y, 1);
-
-    //3
-
-    deviceContext->CSSetShader(computeShader3, NULL, 0);
-    deviceContext->CSSetUnorderedAccessViews(0, 1, &clUAV, NULL);
-    deviceContext->CSSetUnorderedAccessViews(1, 1, &vertexUAV, NULL);
-
-    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
-
-    deviceContext->Dispatch(N_X, N_Y, 1);
-
 
 
     // Swap buffers
