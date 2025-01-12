@@ -27,6 +27,9 @@ LRESULT CALLBACK WindowProcFor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& title) {
+
+    PrzygotujTablice();
+
     // Register the window class
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProcFor;
@@ -55,12 +58,7 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
         exit(EXIT_FAILURE);
     }
 
-    aa = new Punkt[N_X * N_Y];
-    for (int i = 0; i < N_X * N_Y; ++i) {
-        aa[i].m = 1.0f;
-        aa[i].v = 0.0f;
-        aa[i].x = 0.0f;
-    }
+
 
     ShowWindow(hwnd, SW_SHOW);
 
@@ -75,22 +73,6 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
     //InitDirectCompute();
 }
 
-
-void przygotujIndeksy(std::vector<WORD>& indices, int N_X, int N_Y) {
-    for (int i = 0; i < N_Y - 1; ++i) {
-        for (int j = 0; j < N_X - 1; ++j) {
-            // First triangle
-            indices.push_back(i * N_Y + j);
-            indices.push_back(i * N_Y + (j + 1));
-            indices.push_back((i + 1) * N_Y + j);
-
-            // Second triangle
-            indices.push_back((i + 1) * N_Y + j);
-            indices.push_back(i * N_Y + (j + 1));
-            indices.push_back((i + 1) * N_Y + (j + 1));
-        }
-    }
-}
 
 WindowsWaveDirect::~WindowsWaveDirect() {
     // Clean up DirectX resources
@@ -476,14 +458,7 @@ void WindowsWaveDirect::OnRenderFrame() {
     ////ustawienie bufora indeksów wierzcho³ków:
     //UINT indices[] = { 0, 1, 2 };
         //przyk³ad u¿ycia od ai
-    std::vector<WORD> indices;
-    przygotujIndeksy(indices, N_X, N_Y);  //todo: to w innym miejscu
 
-    // Print indices for verification
-    for (size_t i = 0; i < indices.size(); i += 3) {
-        std::cout << "Triangle " << i / 3 << ": ";
-        std::cout << indices[i] << ", " << indices[i + 1] << ", " << indices[i + 2] << std::endl;
-    }
    
     D3D11_BUFFER_DESC ibd = {};
     ibd.Usage = D3D11_USAGE_DEFAULT;

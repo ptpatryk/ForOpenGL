@@ -45,6 +45,9 @@
     <ClCompile Include="WindowsWaveDirect.utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsWaveDirect.Startowe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

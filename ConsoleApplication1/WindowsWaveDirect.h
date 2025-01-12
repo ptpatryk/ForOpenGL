@@ -4,6 +4,7 @@
 #include <string>
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <vector>
 
 class WindowsWaveDirect {
 public:
@@ -70,6 +71,8 @@ private:
 
 
     Punkt* aa = nullptr;
+    std::vector<WORD> indices;
+    void PrzygotujTablice();
     float czas = 0.0f;
     float dt = 0.01f;
     int N_X = 100;
