@@ -35,6 +35,8 @@ private:
     HRESULT UzupelnienieBuforuTrojkatemIBuforIndeksow();
     HRESULT BuforuIndeksowPlata();
 
+    HRESULT UstawienieMaciezy();
+
     //funkcje pom
     HRESULT CreateStructuredBuffer(ID3D11Device* pDevice, UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBufOut);
     HRESULT CreateBufferUAV(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, ID3D11UnorderedAccessView** ppUAVOut);

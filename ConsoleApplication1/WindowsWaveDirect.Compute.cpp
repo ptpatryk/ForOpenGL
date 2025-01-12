@@ -18,6 +18,15 @@ void WindowsWaveDirect::InitDirectCompute() {
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
     CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &vertexBuffer);
 
+    //-------------------------------------------------------------
+    //wstawka dla wyúwietlania
+        // Set vertex buffer
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+
+    //-------------------------------------------------------------
+
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
@@ -80,7 +89,7 @@ void WindowsWaveDirect::RunKernel() {
     // Swap buffers
     std::swap(aaUAV, bbUAV);
 
-    /*
+    
     //odczytanie danych z bufora
 
     ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, vertexBuffer);
@@ -92,15 +101,15 @@ void WindowsWaveDirect::RunKernel() {
     if (SUCCEEDED(hr))
     {
         // Uzyskaj wskaünik do danych
-        float* dane = reinterpret_cast<float*>(mappedResource.pData);
+        Vertex* dane = reinterpret_cast<Vertex*>(mappedResource.pData);
         //Punkt[] dane = (Punkt[])mappedResource.pData;
 
 
         // Przetwarzaj dane
         // ...
-        for (int i = 0; i < N_X; i++)
+         for (int i = 0; i < N_X; i++)
         {
-            std::cout << dane[i] << std::endl;
+            //std::cout << dane[i] << std::endl;
         }
         // Odmapuj bufor
         deviceContext->Unmap(stagingBuffer, 0);
@@ -109,7 +118,7 @@ void WindowsWaveDirect::RunKernel() {
     {
         // Obs≥uga b≥Ídu
     }
-    */
+   
 
     /*
     ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, bbBuffer);

@@ -67,7 +67,7 @@ WindowsWaveDirect::WindowsWaveDirect(int width, int height, const std::string& t
 		int i = 4;
 	}
 
-	//InitDirectCompute();
+	InitDirectCompute();
 }
 
 WindowsWaveDirect::~WindowsWaveDirect() {
@@ -151,7 +151,13 @@ HRESULT WindowsWaveDirect::InitDirectX() {
 	//shader
 	hr = VPShaderTworz();
 
-	UzupelnienieBuforuTrojkatemIBuforIndeksow();
+	//hr = UzupelnienieBuforuTrojkatemIBuforIndeksow();
+
+
+
+	BuforuIndeksowPlata();
+
+	hr = UstawienieMaciezy();
 
 	return S_OK;
 }
@@ -278,17 +284,17 @@ HRESULT WindowsWaveDirect::UzupelnienieBuforuTrojkatemIBuforIndeksow()
 	D3D11_SUBRESOURCE_DATA initData = {};
 	initData.pSysMem = vertices;
 
-	//ID3D11Buffer* vertexBuffer = nullptr;
 	HRESULT hr = device->CreateBuffer(&bd, &initData, &vertexBuffer);
 	if (FAILED(hr)) {
 		return hr;
 	}
-
+	
 	// Set vertex buffer
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 
+	/*
 	// Create index buffer for vertex buffer
 	WORD indices[] = { 2,1,0 };
 	bd.Usage = D3D11_USAGE_DEFAULT;
@@ -305,27 +311,7 @@ HRESULT WindowsWaveDirect::UzupelnienieBuforuTrojkatemIBuforIndeksow()
 
 	// Set primitive topology
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Create the constant buffer
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(ConstantBuffer);
-	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bd.CPUAccessFlags = 0;
-	hr = device->CreateBuffer(&bd, nullptr, &g_pConstantBuffer);
-	if (FAILED(hr))
-		return hr;
-
-	// Initialize the world matrices
-	g_World = XMMatrixIdentity();
-
-	// Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet(0.0f, 4.0f, -10.0f, 0.0f);
-	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	g_View = XMMatrixLookAtLH(Eye, At, Up);
-
-	// Initialize the projection matrix
-	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (FLOAT)height, 0.01f, 100.0f);
+	*/
 
 	return S_OK;
 }
@@ -359,6 +345,32 @@ HRESULT WindowsWaveDirect::BuforuIndeksowPlata()
 	return hr;
 }
 
+HRESULT WindowsWaveDirect::UstawienieMaciezy()
+{
+	D3D11_BUFFER_DESC bd = {};
+	// Create the constant buffer
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(ConstantBuffer);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = 0;
+	HRESULT hr = device->CreateBuffer(&bd, nullptr, &g_pConstantBuffer);
+	if (FAILED(hr))
+		return hr;
+
+	// Initialize the world matrices
+	g_World = XMMatrixIdentity();
+
+	// Initialize the view matrix
+	XMVECTOR Eye = XMVectorSet(0.0f, 4.0f, -10.0f, 0.0f);
+	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	g_View = XMMatrixLookAtLH(Eye, At, Up);
+
+	// Initialize the projection matrix
+	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (FLOAT)height, 0.01f, 100.0f);
+
+	return S_OK;
+}
 
 void WindowsWaveDirect::OnRenderFrame() {
 	//sporo nadmiarowego kodu, bo muszê wywaliæ rotacjê. - zostawiæ tylko mi potrzebne
@@ -581,7 +593,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
-	//RunKernel();
+	RunKernel();
 	czas += dt;
 }
 

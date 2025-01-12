@@ -29,12 +29,6 @@ cbuffer Constants : register(b0)
 void obliczWspolrzedne(
     RWStructuredBuffer<Punkt> aa : register(u0),
     RWStructuredBuffer<Punkt> bb : register(u1),
-    //float dt,
-    //float w,
-    //int N_X,
-    //int N_Y,
-    //float zv,
-    //float czas,
     uint3 threadID : SV_DispatchThreadID
 )
 {
@@ -108,4 +102,29 @@ void obliczNormalne(
         punorm[i * N_Y + j].ny = 0.0;
         punorm[i * N_Y + j].nz = 1.0;
     }
+    
+    //schader prawid³owo przekazuje do renderowania punkty, ale coœ Ÿle liczy!!! dla indeksów ponad 100 s¹ zera!!!!!
+    punorm[0].x = 0;
+    punorm[0].y = 0.5f;
+    punorm[0].z = 0;
+    punorm[0].nx = 0;
+    punorm[0].ny = 0;
+    punorm[0].nz = -1.0f;
+    
+    punorm[1].x = -0.5f;
+    punorm[1].y = -0.5f;
+    punorm[1].z = 0;
+    punorm[1].nx = 0;
+    punorm[1].ny = 0;
+    punorm[1].nz = -1.0f;
+
+    punorm[100].x = 0.5f;
+    punorm[100].y = -0.5f;
+    punorm[100].z = 0;
+    punorm[100].nx = 0;
+    punorm[100].ny = 0;
+    punorm[100].nz = -1.0f;
+    
+    
+    
 }

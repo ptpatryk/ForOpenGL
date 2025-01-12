@@ -10,6 +10,12 @@ void WindowsWaveDirect::PrzygotujTablice()
         aa[i].x = 0.0f;
     }
 
+    /*
+    indices.push_back(2);
+    indices.push_back(1);
+    indices.push_back(0);
+    */
+    
     //tablice indeksów trójk¹tów dla punktów na p³aszczyŸnie
     for (int i = 0; i < N_Y - 1; ++i) {
         for (int j = 0; j < N_X - 1; ++j) {
@@ -24,7 +30,7 @@ void WindowsWaveDirect::PrzygotujTablice()
             indices.push_back((i + 1) * N_Y + (j + 1));
         }
     }
-
+    
     //// Print indices for verification
     //for (size_t i = 0; i < indices.size(); i += 3) {
     //    std::cout << "Triangle " << i / 3 << ": ";
