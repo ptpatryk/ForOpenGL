@@ -36,6 +36,7 @@ void WindowsWaveDirect::InitDirectCompute() {
 
     //blok ustawiaj¹ce sta³e w buforze ////////////////////////
 
+    //zwiêkszyæ rozmiar aby rozmia ry³ wielokrotnoœci¹ 16 majtów - bo bufor musi byæ wielokrotnoœci¹ 16 bajtów, a jak ³aduje 32 bajty to mogê odwo³aæ siê do z³ej pamiêci
     struct Constants
     {
         float dt;
@@ -49,17 +50,30 @@ void WindowsWaveDirect::InitDirectCompute() {
 
     D3D11_BUFFER_DESC bufferDesc = {};
     bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(Constants);
+    bufferDesc.ByteWidth = 32; // sizeof(Constants); - bo to rówan siê 24 - przez zwiêkszony rozmiar mo¿e siê wykrzaczyæ!!
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
 
     D3D11_SUBRESOURCE_DATA initData = {};
-    Constants constants = { 0.016f, 1.0f, 100, 100, 0.5f, 0.0f }; // Przyk³adowe wartoœci
+    //Constants constants = { 0.016f, 1.0f, 100, 100, 0.5f, 0.0f }; // Przyk³adowe wartoœci
+    Constants constants;
+    constants.czas = czas;
+    constants.dt = dt;
+    constants.N_X = N_X;
+    constants.N_Y = N_Y;
+    constants.w = w;
+    constants.zv = 0.5f; //tu wartoœæ cos zale¿na od czasu
+
+
     initData.pSysMem = &constants;
 
     HRESULT hr = device->CreateBuffer(&bufferDesc, &initData, &constantBuffer);
     if (FAILED(hr))
     {
+        //const char* errorString = DXGetErrorString(hr);
+        //const char* errorDescription = DXGetErrorDescription(hr);
+        //printf("Error: %s - %s\n", errorString, errorDescription);
+        int t = 99;
         // Obs³uga b³êdu
     }
     ////koniec tego bloku
@@ -71,7 +85,7 @@ void WindowsWaveDirect::RunKernel() {
     deviceContext->CSSetUnorderedAccessViews(0, 1, &aaUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &bbUAV, NULL);
 
-    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
+    deviceContext->CSSetConstantBuffers(1, 1, &constantBuffer); // Dla compute shader
 
     deviceContext->Dispatch(N_X, N_Y, 1);
 
@@ -81,7 +95,7 @@ void WindowsWaveDirect::RunKernel() {
     deviceContext->CSSetUnorderedAccessViews(0, 1, &bbUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &vertexUAV, NULL);
 
-    deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
+    deviceContext->CSSetConstantBuffers(1, 1, &constantBuffer); // Dla compute shader
 
     deviceContext->Dispatch(N_X, N_Y, 1);
 
