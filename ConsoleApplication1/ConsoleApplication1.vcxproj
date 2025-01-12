@@ -139,6 +139,7 @@
     <ClCompile Include="Source1.cpp" />
     <ClCompile Include="Source2.cpp" />
     <ClCompile Include="WindowsWave.cpp" />
+    <ClCompile Include="WindowsWaveDirect.Compute.cpp" />
     <ClCompile Include="WindowsWaveDirect.cpp" />
     <ClCompile Include="WindowsWaveDirect.Startowe.cpp" />
     <ClCompile Include="WindowsWaveDirect.utility.cpp" />

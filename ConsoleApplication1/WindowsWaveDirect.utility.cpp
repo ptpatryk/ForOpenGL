@@ -153,3 +153,44 @@ if (FAILED(hr))
 }
 */
 }
+
+
+//--------------------------------------------------------------------------------------
+// chyba tych funkcji nie potrzebuje
+HRESULT WindowsWaveDirect::TworzenieBuforaGlebi()
+{
+    // Tworzenie zasobu bufora g³êbokoœci
+    ID3D11Texture2D* depthStencilBuffer = nullptr;
+    D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+    depthStencilDesc.Width = width; // Szerokoœæ bufora
+    depthStencilDesc.Height = height; // Wysokoœæ bufora
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.CPUAccessFlags = 0;
+    depthStencilDesc.MiscFlags = 0;
+
+    HRESULT hr = device->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer);
+    if (FAILED(hr)) {
+        // Obs³uga b³êdów
+        int i = 3;
+    }
+    else {
+        hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+        if (FAILED(hr)) {
+            // Obs³uga b³êdów
+            int i = 3;
+        }
+    }
+
+    //nie wiem czy to coœ potrzebne - z odkomentowanego kodu
+    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&depthStencilBuffer);
+    device->CreateRenderTargetView(depthStencilBuffer, nullptr, &renderTargetView);
+
+
+    return hr;
+}
