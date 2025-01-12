@@ -1,3 +1,5 @@
+#include "All.fxh"
+
 //struct PS_INPUT
 //{
 //    float4 Pos : SV_POSITION;
@@ -9,7 +11,7 @@
 //	return float4(1.0f, 0.0f, 0.0f, 1.0f);
 //}
 
-float4 main() : SV_TARGET
-{
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
-}
+//float4 main() : SV_TARGET
+//{
+//	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+//}

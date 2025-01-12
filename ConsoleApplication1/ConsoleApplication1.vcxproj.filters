@@ -57,7 +57,7 @@
     <None Include="fragment_shader.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Tutorial06.fxh">
+    <None Include="All.fxh">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
