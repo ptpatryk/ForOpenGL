@@ -74,7 +74,7 @@ private:
     XMMATRIX                g_World;
     XMMATRIX                g_View;
     XMMATRIX                g_Projection;
-
+    D3D_DRIVER_TYPE         g_driverType = D3D_DRIVER_TYPE_NULL;
 
 
     struct Punkt {

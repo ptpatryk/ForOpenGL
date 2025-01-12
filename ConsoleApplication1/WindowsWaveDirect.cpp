@@ -361,128 +361,223 @@ HRESULT WindowsWaveDirect::BuforuIndeksowPlata()
 
 
 void WindowsWaveDirect::OnRenderFrame() {
+	//sporo nadmiarowego kodu, bo muszê wywaliæ rotacjê. - zostawiæ tylko mi potrzebne
+	// Update our time
+	static float t = 0.0f;
+	if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
+	{
+		t += (float)XM_PI * 0.0125f;
+	}
+	else
+	{
+		static ULONGLONG timeStart = 0;
+		ULONGLONG timeCur = GetTickCount64();
+		if (timeStart == 0)
+			timeStart = timeCur;
+		t = (timeCur - timeStart) / 1000.0f;
+	}
 
-	/*
-	// Czyszczenie ekranu
-	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	// Rotate cube around the origin
+	g_World = XMMatrixRotationY(t);
 
-	// Ustawianie shaderów
+	// Setup our lighting parameters
+	XMFLOAT4 vLightDirs[2] =
+	{
+		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
+	};
+	XMFLOAT4 vLightColors[2] =
+	{
+		XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
+		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
+	};
+
+	// Rotate the second light around the origin
+	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
+	vLightDir = XMVector3Transform(vLightDir, mRotate);
+	XMStoreFloat4(&vLightDirs[1], vLightDir);
+
+	//
+	// Clear the back buffer
+	//
+
+	deviceContext->ClearRenderTargetView(renderTargetView, Colors::MidnightBlue);
+
+	//
+	// Clear the depth buffer to 1.0 (max depth)
+	//
+	deviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	//
+	// Update matrix variables and lighting variables
+	//
+	ConstantBuffer cb1;
+	cb1.mWorld = XMMatrixTranspose(g_World);
+	cb1.mView = XMMatrixTranspose(g_View);
+	cb1.mProjection = XMMatrixTranspose(g_Projection);
+	cb1.vLightDir[0] = vLightDirs[0];
+	cb1.vLightDir[1] = vLightDirs[1];
+	cb1.vLightColor[0] = vLightColors[0];
+	cb1.vLightColor[1] = vLightColors[1];
+	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+	deviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+
+	//
+	// Render the cube
+	//
 	deviceContext->VSSetShader(vertexShader, nullptr, 0);
+	deviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-	// Ustawianie bufora wierzcho³ków i layoutu wejœciowego
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	deviceContext->IASetInputLayout(inputLayout);
-
-	// Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Rysowanie prymitywów
-	//deviceContext->Draw(N_X * N_Y * 36, 0);
-	deviceContext->Draw(3, 0);
-
-	// Prezentacja
-	swapChain->Present(0, 0);
-
-	*/
-	// Struktura wierzcho³ka
-
-	/*
-
-	// Czyszczenie ekranu
-	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-
-	// Ustawienie shaderów
-	deviceContext->VSSetShader(vertexShader, nullptr, 0);
-	deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-	// Ustawienie input layout
-	deviceContext->IASetInputLayout(inputLayout);
-
-	// Rysowanie trójk¹ta
-	deviceContext->Draw(3, 0);
-
-	// Prezentacja
-	swapChain->Present(1, 0);
-
-	*/
-
-
-
-	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-	int vertexCount = N_X * N_Y;
-
-
-	// Ustawienie bufora wierzcho³ków
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-
-
-
-	//deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//deviceContext->IASetInputLayout(inputLayout);
-
-
-
-
-
-
-
-	// Rysowanie trójk¹tów
-	//deviceContext->DrawIndexed(indexCount, 0, 0);
-   // deviceContext->DrawIndexed(3, 0, 0);
-
-	deviceContext->Draw(3, 0);
-
-
-	// Render your scene here
-
-	swapChain->Present(1, 0);
-
-
-
-
-	//tu próbowa³em u¿yæ innego bufora
-	/*
-	D3D11_BUFFER_DESC bd = {};
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(vertices);
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA initData = {};
-	initData.pSysMem = vertices;
-
-	ID3D11Buffer* vertexBufferX = nullptr;
-	device->CreateBuffer(&bd, &initData, &vertexBufferX);
-
-	// Ustawienie bufora wierzcho³ków
-	UINT stride = sizeof(XVertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &vertexBufferX, &stride, &offset);
-
-	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-
-
-	// Rysowanie trójk¹tów
-	//deviceContext->DrawIndexed(indexCount, 0, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	deviceContext->DrawIndexed(3, 0, 0);
 
+	////
+	//// Render each light - do wywalenia - nie ustawiam drugiego œwiat³a - œwiat³o mam ustawiæ na sta³e
+	////
+	//for (int m = 0; m < 2; m++)
+	//{
+	//	XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[m]));
+	//	XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+	//	mLight = mLightScale * mLight;
+
+	//	// Update the world variable to reflect the current light
+	//	cb1.mWorld = XMMatrixTranspose(mLight);
+	//	cb1.vOutputColor = vLightColors[m];
+	//	deviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
+
+	//	deviceContext->PSSetShader(g_pPixelShaderSolid, nullptr, 0);
+	//	deviceContext->DrawIndexed(36, 0, 0);
+	//}
+
+	//
+	// Present our back buffer to our front buffer
+	//
+	swapChain->Present(0, 0);
 
 
 
-	// Render your scene here
+	///*
+	//// Czyszczenie ekranu
+	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+	//deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	swapChain->Present(1, 0);
-	*/
+	//// Ustawianie shaderów
+	//deviceContext->VSSetShader(vertexShader, nullptr, 0);
+	//deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+	//// Ustawianie bufora wierzcho³ków i layoutu wejœciowego
+	//UINT stride = sizeof(Vertex);
+	//UINT offset = 0;
+	//deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	//deviceContext->IASetInputLayout(inputLayout);
+
+	//// Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
+	//deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//// Rysowanie prymitywów
+	////deviceContext->Draw(N_X * N_Y * 36, 0);
+	//deviceContext->Draw(3, 0);
+
+	//// Prezentacja
+	//swapChain->Present(0, 0);
+
+	//*/
+	//// Struktura wierzcho³ka
+
+	///*
+
+	//// Czyszczenie ekranu
+	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+
+	//// Ustawienie shaderów
+	//deviceContext->VSSetShader(vertexShader, nullptr, 0);
+	//deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+	//// Ustawienie input layout
+	//deviceContext->IASetInputLayout(inputLayout);
+
+	//// Rysowanie trójk¹ta
+	//deviceContext->Draw(3, 0);
+
+	//// Prezentacja
+	//swapChain->Present(1, 0);
+
+	//*/
+
+
+
+	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+	//int vertexCount = N_X * N_Y;
+
+
+	//// Ustawienie bufora wierzcho³ków
+	//UINT stride = sizeof(Vertex);
+	//UINT offset = 0;
+	//deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+
+
+
+	////deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	////deviceContext->IASetInputLayout(inputLayout);
+
+
+
+
+
+
+
+	//// Rysowanie trójk¹tów
+	////deviceContext->DrawIndexed(indexCount, 0, 0);
+ //  // deviceContext->DrawIndexed(3, 0, 0);
+
+	//deviceContext->Draw(3, 0);
+
+
+	//// Render your scene here
+
+	//swapChain->Present(1, 0);
+
+
+
+
+	////tu próbowa³em u¿yæ innego bufora
+	///*
+	//D3D11_BUFFER_DESC bd = {};
+	//bd.Usage = D3D11_USAGE_DEFAULT;
+	//bd.ByteWidth = sizeof(vertices);
+	//bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//bd.CPUAccessFlags = 0;
+
+	//D3D11_SUBRESOURCE_DATA initData = {};
+	//initData.pSysMem = vertices;
+
+	//ID3D11Buffer* vertexBufferX = nullptr;
+	//device->CreateBuffer(&bd, &initData, &vertexBufferX);
+
+	//// Ustawienie bufora wierzcho³ków
+	//UINT stride = sizeof(XVertex);
+	//UINT offset = 0;
+	//deviceContext->IASetVertexBuffers(0, 1, &vertexBufferX, &stride, &offset);
+
+	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
+
+
+	//// Rysowanie trójk¹tów
+	////deviceContext->DrawIndexed(indexCount, 0, 0);
+	//deviceContext->DrawIndexed(3, 0, 0);
+
+
+
+
+	//// Render your scene here
+
+	//swapChain->Present(1, 0);
+	//*/
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
