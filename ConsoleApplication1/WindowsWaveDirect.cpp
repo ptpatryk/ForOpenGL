@@ -339,13 +339,13 @@ void WindowsWaveDirect::InitDirectCompute() {
     // Create buffers
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, &aa[0], &aaBuffer);
     CreateStructuredBuffer(device, sizeof(Punkt), N_X * N_Y, nullptr, &bbBuffer);
-    CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &clNbo);
+    CreateStructuredBuffer(device, sizeof(Vertex), N_X * N_Y, nullptr, &vertexBuffer);
     
 
     printf("Creating buffer views...");
     CreateBufferUAV(device, aaBuffer, &aaUAV);
     CreateBufferUAV(device, bbBuffer, &bbUAV);
-    CreateBufferUAV(device, clNbo, &clUAV);
+    CreateBufferUAV(device, vertexBuffer, &vertexUAV);
  
      
 //blok ustawiaj¹ce sta³e w buforze ////////////////////////
@@ -583,7 +583,7 @@ void WindowsWaveDirect::RunKernel() {
 
     deviceContext->CSSetShader(computeShader2, NULL, 0);
     deviceContext->CSSetUnorderedAccessViews(0, 1, &bbUAV, NULL);
-    deviceContext->CSSetUnorderedAccessViews(1, 1, &clUAV, NULL);
+    deviceContext->CSSetUnorderedAccessViews(1, 1, &vertexUAV, NULL);
 
     deviceContext->CSSetConstantBuffers(0, 1, &constantBuffer); // Dla compute shader
 

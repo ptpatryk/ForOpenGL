@@ -40,14 +40,11 @@ private:
     ID3D11RenderTargetView* renderTargetView = nullptr;
     ID3D11ComputeShader* computeShader1 = nullptr;
     ID3D11ComputeShader* computeShader2 = nullptr;
-    ID3D11ComputeShader* computeShader3 = nullptr;
     ID3D11Buffer* aaBuffer = nullptr;
     ID3D11Buffer* bbBuffer = nullptr;
-    ID3D11Buffer* clNbo = nullptr;
     ID3D11Buffer* vertexBuffer = nullptr;
     ID3D11UnorderedAccessView* aaUAV = nullptr;
     ID3D11UnorderedAccessView* bbUAV = nullptr;
-    ID3D11UnorderedAccessView* clUAV = nullptr;
     ID3D11UnorderedAccessView* vertexUAV = nullptr;
     ID3D11VertexShader* vertexShader = nullptr;
     ID3D11PixelShader* pixelShader = nullptr;
@@ -65,9 +62,6 @@ private:
         float x;
     };
 
-    struct PunktNormal {
-        float x, y, z, nx, ny, nz;
-    };
 
     struct Vertex {
         DirectX::XMFLOAT3 Position;
