@@ -180,7 +180,7 @@ HRESULT WindowsWaveDirect::TworzenieBuforaGlebi()
         int i = 3;
     }
     else {
-        hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+        hr = device->CreateDepthStencilView(depthStencilBuffer, nullptr, &g_pDepthStencilView);
         if (FAILED(hr)) {
             // Obs³uga b³êdów
             int i = 3;
@@ -193,4 +193,29 @@ HRESULT WindowsWaveDirect::TworzenieBuforaGlebi()
 
 
     return hr;
+}
+
+void WindowsWaveDirect::UstawienieMaciezySwiata()
+{
+    //macie¿ dla VS
+    struct ConstantBuffer {
+        DirectX::XMMATRIX WorldViewProjection;
+    };
+
+    ConstantBuffer cb;
+    cb.WorldViewProjection = DirectX::XMMatrixIdentity(); // Przyk³adowa macierz
+
+    D3D11_BUFFER_DESC cbd = {};
+    cbd.Usage = D3D11_USAGE_DEFAULT;
+    cbd.ByteWidth = sizeof(ConstantBuffer);
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = &cb;
+
+    ID3D11Buffer* constantBuffer = nullptr;
+    device->CreateBuffer(&cbd, &initData, &constantBuffer);
+
+    deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 }
