@@ -220,48 +220,57 @@ void WindowsWaveDirect::UstawienieMaciezySwiata()
 
 HRESULT WindowsWaveDirect::VPShaderTworz()
 {
-    //koniecznie w destruktorze: vsBlob->Release();
+    //VS ----------------------------------------------------------------------
+    // Compile the vertex shader
     ID3DBlob* vsBlob = nullptr;
-    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, nullptr);
+    HRESULT hr = D3DCompileFromFile(L"All.fxh", nullptr, nullptr, "VS", "vs_5_0", 0, 0, &vsBlob, nullptr);
     if (FAILED(hr)) {
         return hr;
     }
 
+    // Create the vertex shader
     hr = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
-    if (FAILED(hr)) {
+    if (FAILED(hr))
+    {
+        vsBlob->Release();
         return hr;
     }
 
-    ID3DBlob* psBlob = nullptr;
-    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, nullptr);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    deviceContext->VSSetShader(vertexShader, nullptr, 0);
-    deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-    //Layout wyjœciowy:
-
+    // Define the input layout
     D3D11_INPUT_ELEMENT_DESC layout[] = {
      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
      { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
-    //hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+    // Create the input layout
     hr = device->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
     if (FAILED(hr)) {
-        // Obs³uga b³êdów
+        return hr;
+    }
+	vsBlob->Release();
+
+    deviceContext->IASetInputLayout(inputLayout);
+
+	//PS ----------------------------------------------------------------------
+	// Compile the pixel shader
+    ID3DBlob* psBlob = nullptr;
+    hr = D3DCompileFromFile(L"All.fxh", nullptr, nullptr, "PS", "ps_5_0", 0, 0, &psBlob, nullptr);
+    if (FAILED(hr)) {
         return hr;
     }
 
-    //todo: bez tej linijki to samo - nadal jeden punkt
-    deviceContext->IASetInputLayout(inputLayout);
+	// Create the pixel shader
+    hr = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+    if (FAILED(hr)) {
+        return hr;
+    }
+	psBlob->Release();
+
+
+    //todo: to w bloku render?
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
 
 
     return hr;
