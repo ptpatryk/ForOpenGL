@@ -357,6 +357,7 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	if (FAILED(hr))
 		return hr;
 
+	/*
 	// Initialize the world matrices
 	g_World = XMMatrixIdentity();
 
@@ -368,6 +369,24 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 
 	// Initialize the projection matrix
 	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (FLOAT)height, 0.01f, 100.0f);
+	*/
+
+	// Ustawienia macierzy
+	g_World = XMMatrixIdentity();
+	g_View = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+	// Ustawienie k¹tów obrotu
+	float angleZ = XMConvertToRadians(45.0f);
+	float angleX = XMConvertToRadians(30.0f);
+
+	// Tworzenie macierzy obrotu
+	XMMATRIX rotationMatrixZ = XMMatrixRotationZ(angleZ);
+	XMMATRIX rotationMatrixX = XMMatrixRotationX(angleX);
+	XMMATRIX rotationMatrix = rotationMatrixZ * rotationMatrixX;
+
+	// Tworzenie macierzy rzutowania ortograficznego
+	g_Projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
+
 
 	return S_OK;
 }
@@ -375,27 +394,32 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 void WindowsWaveDirect::OnRenderFrame() {
 	//sporo nadmiarowego kodu, bo muszê wywaliæ rotacjê. - zostawiæ tylko mi potrzebne
 	// Update our time
-	//static float t = 0.0f;
-	//if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
-	//{
-	//	t += (float)XM_PI * 0.0125f;
-	//}
-	//else
-	//{
-	//	static ULONGLONG timeStart = 0;
-	//	ULONGLONG timeCur = GetTickCount64();
-	//	if (timeStart == 0)
-	//		timeStart = timeCur;
-	//	t = (timeCur - timeStart) / 1000.0f;
-	//}
+	static float t = 0.0f;
+	if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
+	{
+		t += (float)XM_PI * 0.0125f;
+	}
+	else
+	{
+		static ULONGLONG timeStart = 0;
+		ULONGLONG timeCur = GetTickCount64();
+		if (timeStart == 0)
+			timeStart = timeCur;
+		t = (timeCur - timeStart) / 1000.0f;
+	}
 
 	//// Rotate cube around the origin
 	//g_World = XMMatrixRotationY(t);
+	g_World = XMMatrixRotationY(3.4f);
+
+	//std::cout << t << "\r\n";
+
 
 	// Setup our lighting parameters
 	XMFLOAT4 vLightDirs[2] =
 	{
-		XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+		//XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
+		XMFLOAT4(1.2f, 1.0f, 30.0f, 1.0f), //ale bêdê wykorzystywa³ tylko to
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};
 	XMFLOAT4 vLightColors[2] =
@@ -424,10 +448,24 @@ void WindowsWaveDirect::OnRenderFrame() {
 	//
 	// Update matrix variables and lighting variables
 	//
+	/*
+	XMMATRIX model = XMMatrixIdentity();
+	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+	XMMATRIX rotationMatrixZ = XMMatrixRotationZ(XMConvertToRadians(45.0f));
+	XMMATRIX rotationMatrixX = XMMatrixRotationX(XMConvertToRadians(30.0f));
+	XMMATRIX rotationMatrix = rotationMatrixZ * rotationMatrixX;
+
+	XMMATRIX projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
+	*/
 	ConstantBuffer cb1;
 	cb1.mWorld = XMMatrixTranspose(g_World);
 	cb1.mView = XMMatrixTranspose(g_View);
 	cb1.mProjection = XMMatrixTranspose(g_Projection);
+	//cb1.mWorld = XMMatrixTranspose(model);
+	//cb1.mView = XMMatrixTranspose(view);
+	//cb1.mProjection = XMMatrixTranspose(projection);
+
 	cb1.vLightDir[0] = vLightDirs[0];
 	cb1.vLightDir[1] = vLightDirs[1];
 	cb1.vLightColor[0] = vLightColors[0];
@@ -442,7 +480,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 	deviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	deviceContext->PSSetShader(pixelShader, nullptr, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-	deviceContext->DrawIndexed(3*N_X*N_Y, 0, 0);
+	deviceContext->DrawIndexed(2*3*N_X*N_Y, 0, 0);
 
 	////
 	//// Render each light - do wywalenia - nie ustawiam drugiego œwiat³a - œwiat³o mam ustawiæ na sta³e

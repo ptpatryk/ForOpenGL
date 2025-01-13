@@ -20,9 +20,9 @@ void WindowsWaveDirect::PrzygotujTablice()
             indices.push_back((i + 1) * N_Y + j);
 
             // Second triangle
-            //indices.push_back((i + 1) * N_Y + j);
-            //indices.push_back(i * N_Y + (j + 1));
-            //indices.push_back((i + 1) * N_Y + (j + 1));
+            indices.push_back((i + 1) * N_Y + j);
+            indices.push_back(i * N_Y + (j + 1));
+            indices.push_back((i + 1) * N_Y + (j + 1));
         }
     }
     
