@@ -105,33 +105,3 @@ void obliczNormalne(
     
 
 }
-
-    //punorm[0].x = N_Y;
-    //punorm[0].y = N_X;
-    //punorm[0].z = dt;
-    //punorm[0].nx = w;
-    //punorm[0].ny = zv;
-    //punorm[0].nz = bb[3].m;
-    /*
-    //schader prawid³owo przekazuje do renderowania punkty, ale coœ Ÿle liczy!!! dla indeksów ponad 100 s¹ zera!!!!!
-    punorm[0].x = 0;
-    punorm[0].y = 0.5f;
-    punorm[0].z = 0;
-    punorm[0].nx = 0;
-    punorm[0].ny = 0;
-    punorm[0].nz = -1.0f;
-    
-    punorm[1].x = -0.5f;
-    punorm[1].y = -0.5f;
-    punorm[1].z = 0;
-    punorm[1].nx = 0;
-    punorm[1].ny = 0;
-    punorm[1].nz = -1.0f;
-
-    punorm[100].x = 0.5f;
-    punorm[100].y = -0.5f;
-    punorm[100].z = 0;
-    punorm[100].nx = 0;
-    punorm[100].ny = 0;
-    punorm[100].nz = -1.0f;
-    */

@@ -375,22 +375,22 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 void WindowsWaveDirect::OnRenderFrame() {
 	//sporo nadmiarowego kodu, bo muszê wywaliæ rotacjê. - zostawiæ tylko mi potrzebne
 	// Update our time
-	static float t = 0.0f;
-	if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
-	{
-		t += (float)XM_PI * 0.0125f;
-	}
-	else
-	{
-		static ULONGLONG timeStart = 0;
-		ULONGLONG timeCur = GetTickCount64();
-		if (timeStart == 0)
-			timeStart = timeCur;
-		t = (timeCur - timeStart) / 1000.0f;
-	}
+	//static float t = 0.0f;
+	//if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
+	//{
+	//	t += (float)XM_PI * 0.0125f;
+	//}
+	//else
+	//{
+	//	static ULONGLONG timeStart = 0;
+	//	ULONGLONG timeCur = GetTickCount64();
+	//	if (timeStart == 0)
+	//		timeStart = timeCur;
+	//	t = (timeCur - timeStart) / 1000.0f;
+	//}
 
-	// Rotate cube around the origin
-	g_World = XMMatrixRotationY(t);
+	//// Rotate cube around the origin
+	//g_World = XMMatrixRotationY(t);
 
 	// Setup our lighting parameters
 	XMFLOAT4 vLightDirs[2] =
@@ -404,11 +404,11 @@ void WindowsWaveDirect::OnRenderFrame() {
 		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
 	};
 
-	// Rotate the second light around the origin
-	XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-	XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
-	vLightDir = XMVector3Transform(vLightDir, mRotate);
-	XMStoreFloat4(&vLightDirs[1], vLightDir);
+	//// Rotate the second light around the origin
+	//XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+	//XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
+	//vLightDir = XMVector3Transform(vLightDir, mRotate);
+	//XMStoreFloat4(&vLightDirs[1], vLightDir);
 
 	//
 	// Clear the back buffer
@@ -442,7 +442,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 	deviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	deviceContext->PSSetShader(pixelShader, nullptr, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-	deviceContext->DrawIndexed(3, 0, 0);
+	deviceContext->DrawIndexed(3*N_X*N_Y, 0, 0);
 
 	////
 	//// Render each light - do wywalenia - nie ustawiam drugiego œwiat³a - œwiat³o mam ustawiæ na sta³e

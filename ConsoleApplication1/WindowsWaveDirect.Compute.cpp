@@ -104,34 +104,34 @@ void WindowsWaveDirect::RunKernel() {
     std::swap(aaUAV, bbUAV);
 
     
-    //odczytanie danych z bufora
+    //odczytanie danych z bufora - wyciek by≥ jak czyta≥em dane z bufora
 
-    ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, vertexBuffer);
+    //ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, vertexBuffer);
 
-    deviceContext->CopyResource(stagingBuffer, vertexBuffer);
+    //deviceContext->CopyResource(stagingBuffer, vertexBuffer);
 
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    HRESULT hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
-    if (SUCCEEDED(hr))
-    {
-        // Uzyskaj wskaünik do danych
-        Vertex* dane = reinterpret_cast<Vertex*>(mappedResource.pData);
-        //Punkt[] dane = (Punkt[])mappedResource.pData;
+    //D3D11_MAPPED_SUBRESOURCE mappedResource;
+    //HRESULT hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    //if (SUCCEEDED(hr))
+    //{
+    //    // Uzyskaj wskaünik do danych
+    //    Vertex* dane = reinterpret_cast<Vertex*>(mappedResource.pData);
+    //    //Punkt[] dane = (Punkt[])mappedResource.pData;
 
 
-        // Przetwarzaj dane
-        // ...
-         for (int i = 0; i < N_X; i++)
-        {
-            //std::cout << dane[i] << std::endl;
-        }
-        // Odmapuj bufor
-        deviceContext->Unmap(stagingBuffer, 0);
-    }
-    else
-    {
-        // Obs≥uga b≥Ídu
-    }
+    //    // Przetwarzaj dane
+    //    // ...
+    //     for (int i = 0; i < N_X; i++)
+    //    {
+    //        //std::cout << dane[i] << std::endl;
+    //    }
+    //    // Odmapuj bufor
+    //    deviceContext->Unmap(stagingBuffer, 0);
+    //}
+    //else
+    //{
+    //    // Obs≥uga b≥Ídu
+    //}
    
 
     /*
