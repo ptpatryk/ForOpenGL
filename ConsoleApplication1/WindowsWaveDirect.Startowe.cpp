@@ -10,11 +10,6 @@ void WindowsWaveDirect::PrzygotujTablice()
         aa[i].x = 0.0f;
     }
 
-    /*
-    indices.push_back(2);
-    indices.push_back(1);
-    indices.push_back(0);
-    */
     
     //tablice indeksów trójk¹tów dla punktów na p³aszczyŸnie
     for (int i = 0; i < N_Y - 1; ++i) {
