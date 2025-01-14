@@ -219,3 +219,34 @@ void WindowsWaveDirect::UstawienieMaciezySwiata()
 
     deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 }
+
+HRESULT WindowsWaveDirect::UzupelnienieBuforuTrojkatemIBuforIndeksow()
+{
+    Vertex vertices[] = {
+{ DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
+{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
+    };
+
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    //bd.ByteWidth = sizeof(vertices);
+    bd.ByteWidth = sizeof(Vertex) * 3;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = vertices;
+
+    HRESULT hr = device->CreateBuffer(&bd, &initData, &vertexBuffer);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    // Set vertex buffer
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+
+    return S_OK;
+}

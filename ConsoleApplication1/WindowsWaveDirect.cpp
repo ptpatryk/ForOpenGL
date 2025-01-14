@@ -151,10 +151,6 @@ HRESULT WindowsWaveDirect::InitDirectX() {
 	//shader
 	hr = VPShaderTworz();
 
-	//hr = UzupelnienieBuforuTrojkatemIBuforIndeksow();
-
-
-
 	BuforuIndeksowPlata();
 
 	hr = UstawienieMaciezy();
@@ -239,82 +235,13 @@ HRESULT WindowsWaveDirect::VPShaderTworz()
 	}
 	psBlob->Release();
 
-	//todo: pominiête mo¿e potrzebne - zapytaæ copilot
-	/*
-	// Compile the pixel shader
-	pPSBlob = nullptr;
-	hr = CompileShaderFromFile( L"Tutorial06.fxh", "PSSolid", "ps_4_0", &pPSBlob );
-	if( FAILED( hr ) )
-	{
-		MessageBox( nullptr,
-					L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK );
-		return hr;
-	}
-
-	// Create the pixel shader
-	hr = g_pd3dDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShaderSolid );
-	pPSBlob->Release();
-	if( FAILED( hr ) )
-		return hr;
-	
-	*/
-
-	////todo: to w bloku render? - blok do wywalenia
+	////todo: to w bloku render? - blok do wywalenia - a mo¿e jednak tu zamiast w onrender
 	//deviceContext->VSSetShader(vertexShader, nullptr, 0);
 	//deviceContext->PSSetShader(pixelShader, nullptr, 0);
 
 	return hr;
 }
 
-HRESULT WindowsWaveDirect::UzupelnienieBuforuTrojkatemIBuforIndeksow()
-{
-	Vertex vertices[] = {
-{ DirectX::XMFLOAT3(0.0f,  0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
-{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) },
-{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f) }
-	};
-
-	D3D11_BUFFER_DESC bd = {};
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	//bd.ByteWidth = sizeof(vertices);
-	bd.ByteWidth = sizeof(Vertex)*3;
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA initData = {};
-	initData.pSysMem = vertices;
-
-	HRESULT hr = device->CreateBuffer(&bd, &initData, &vertexBuffer);
-	if (FAILED(hr)) {
-		return hr;
-	}
-	
-	// Set vertex buffer
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-
-	/*
-	// Create index buffer for vertex buffer
-	WORD indices[] = { 2,1,0 };
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(WORD) * 3; //trzy wierzcho³ki
-	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-	initData.pSysMem = indices;
-	hr = device->CreateBuffer(&bd, &initData, &g_pIndexBuffer);
-	if (FAILED(hr))
-		return hr;
-
-	// Set index buffer
-	deviceContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-
-	// Set primitive topology
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	*/
-
-	return S_OK;
-}
 
 //na obliczone wieszcho³ki, póŸniej:
 HRESULT WindowsWaveDirect::BuforuIndeksowPlata()
@@ -371,8 +298,10 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (FLOAT)height, 0.01f, 100.0f);
 	*/
 
+	//tu siê zastanowiæ - do poprawki i mo¿e w zwi¹zku z tym zmodyfikowaæ VS
 	// Ustawienia macierzy
-	g_World = XMMatrixIdentity();
+	//g_World = XMMatrixIdentity();
+	g_World = XMMatrixRotationY(3.4f);
 	g_View = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 
 	// Ustawienie k¹tów obrotu
@@ -387,84 +316,26 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	// Tworzenie macierzy rzutowania ortograficznego
 	g_Projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
 
-
-	return S_OK;
-}
-
-void WindowsWaveDirect::OnRenderFrame() {
-	//sporo nadmiarowego kodu, bo muszê wywaliæ rotacjê. - zostawiæ tylko mi potrzebne
-	// Update our time
-	static float t = 0.0f;
-	if (g_driverType == D3D_DRIVER_TYPE_REFERENCE)
-	{
-		t += (float)XM_PI * 0.0125f;
-	}
-	else
-	{
-		static ULONGLONG timeStart = 0;
-		ULONGLONG timeCur = GetTickCount64();
-		if (timeStart == 0)
-			timeStart = timeCur;
-		t = (timeCur - timeStart) / 1000.0f;
-	}
-
-	//// Rotate cube around the origin
-	//g_World = XMMatrixRotationY(t);
-	g_World = XMMatrixRotationY(3.4f);
-
-	//std::cout << t << "\r\n";
-
-
-	// Setup our lighting parameters
+	// Setup our lighting parameters - pozmieniaæ ¿eby
 	XMFLOAT4 vLightDirs[2] =
 	{
 		//XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
-		XMFLOAT4(10.2f, 10.0f, -30.0f, 1.0f), //ale bêdê wykorzystywa³ tylko to
+		XMFLOAT4(5.2f, 5.0f, -30.0f, 1.0f), //ale bêdê wykorzystywa³ tylko to
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};
 	XMFLOAT4 vLightColors[2] =
 	{
-		XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),
+		XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f),
 		XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)
 	};
 
-	//// Rotate the second light around the origin
-	//XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-	//XMVECTOR vLightDir = XMLoadFloat4(&vLightDirs[1]);
-	//vLightDir = XMVector3Transform(vLightDir, mRotate);
-	//XMStoreFloat4(&vLightDirs[1], vLightDir);
-
-	//
-	// Clear the back buffer
-	//
-
-	deviceContext->ClearRenderTargetView(renderTargetView, Colors::MidnightBlue);
-
-	//
-	// Clear the depth buffer to 1.0 (max depth)
-	//
-	deviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-	//
-	// Update matrix variables and lighting variables
-	//
-	/*
-	XMMATRIX model = XMMatrixIdentity();
-	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-
-	XMMATRIX rotationMatrixZ = XMMatrixRotationZ(XMConvertToRadians(45.0f));
-	XMMATRIX rotationMatrixX = XMMatrixRotationX(XMConvertToRadians(30.0f));
-	XMMATRIX rotationMatrix = rotationMatrixZ * rotationMatrixX;
-
-	XMMATRIX projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
-	*/
+//
+// Update matrix variables and lighting variables
+//
 	ConstantBuffer cb1;
 	cb1.mWorld = XMMatrixTranspose(g_World);
 	cb1.mView = XMMatrixTranspose(g_View);
 	cb1.mProjection = XMMatrixTranspose(g_Projection);
-	//cb1.mWorld = XMMatrixTranspose(model);
-	//cb1.mView = XMMatrixTranspose(view);
-	//cb1.mProjection = XMMatrixTranspose(projection);
 
 	cb1.vLightDir[0] = vLightDirs[0];
 	cb1.vLightDir[1] = vLightDirs[1];
@@ -473,8 +344,23 @@ void WindowsWaveDirect::OnRenderFrame() {
 	cb1.vOutputColor = XMFLOAT4(0, 0, 0, 0);
 	deviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
+
+	return S_OK;
+}
+
+void WindowsWaveDirect::OnRenderFrame() {
 	//
-	// Render the cube
+	// Clear the back buffer
+	//
+	deviceContext->ClearRenderTargetView(renderTargetView, Colors::MidnightBlue);
+
+	//
+	// Clear the depth buffer to 1.0 (max depth)
+	//
+	deviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	//
+	// Render the cube - nie jestem pewny czy wystarczy jak w jednym miejscu bêdê ustawia³ tylko te rzeczy
 	//
 	deviceContext->VSSetShader(vertexShader, nullptr, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
@@ -482,152 +368,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 	deviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	deviceContext->DrawIndexed(2*3*N_X*N_Y, 0, 0);
 
-	////
-	//// Render each light - do wywalenia - nie ustawiam drugiego œwiat³a - œwiat³o mam ustawiæ na sta³e
-	////
-	//for (int m = 0; m < 2; m++)
-	//{
-	//	XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&vLightDirs[m]));
-	//	XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
-	//	mLight = mLightScale * mLight;
-
-	//	// Update the world variable to reflect the current light
-	//	cb1.mWorld = XMMatrixTranspose(mLight);
-	//	cb1.vOutputColor = vLightColors[m];
-	//	deviceContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb1, 0, 0);
-
-	//	deviceContext->PSSetShader(g_pPixelShaderSolid, nullptr, 0);
-	//	deviceContext->DrawIndexed(36, 0, 0);
-	//}
-
-	//
-	// Present our back buffer to our front buffer
-	//
 	swapChain->Present(0, 0);
-
-
-
-	///*
-	//// Czyszczenie ekranu
-	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-	//deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-	//// Ustawianie shaderów
-	//deviceContext->VSSetShader(vertexShader, nullptr, 0);
-	//deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-	//// Ustawianie bufora wierzcho³ków i layoutu wejœciowego
-	//UINT stride = sizeof(Vertex);
-	//UINT offset = 0;
-	//deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	//deviceContext->IASetInputLayout(inputLayout);
-
-	//// Ustawianie topologii prymitywów - jak to wykomêtuje rysuje jeden punkt, mo¿e 2
-	//deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//// Rysowanie prymitywów
-	////deviceContext->Draw(N_X * N_Y * 36, 0);
-	//deviceContext->Draw(3, 0);
-
-	//// Prezentacja
-	//swapChain->Present(0, 0);
-
-	//*/
-	//// Struktura wierzcho³ka
-
-	///*
-
-	//// Czyszczenie ekranu
-	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-
-	//// Ustawienie shaderów
-	//deviceContext->VSSetShader(vertexShader, nullptr, 0);
-	//deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-	//// Ustawienie input layout
-	//deviceContext->IASetInputLayout(inputLayout);
-
-	//// Rysowanie trójk¹ta
-	//deviceContext->Draw(3, 0);
-
-	//// Prezentacja
-	//swapChain->Present(1, 0);
-
-	//*/
-
-
-
-	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-	//int vertexCount = N_X * N_Y;
-
-
-	//// Ustawienie bufora wierzcho³ków
-	//UINT stride = sizeof(Vertex);
-	//UINT offset = 0;
-	//deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-
-
-
-	////deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	////deviceContext->IASetInputLayout(inputLayout);
-
-
-
-
-
-
-
-	//// Rysowanie trójk¹tów
-	////deviceContext->DrawIndexed(indexCount, 0, 0);
- //  // deviceContext->DrawIndexed(3, 0, 0);
-
-	//deviceContext->Draw(3, 0);
-
-
-	//// Render your scene here
-
-	//swapChain->Present(1, 0);
-
-
-
-
-	////tu próbowa³em u¿yæ innego bufora
-	///*
-	//D3D11_BUFFER_DESC bd = {};
-	//bd.Usage = D3D11_USAGE_DEFAULT;
-	//bd.ByteWidth = sizeof(vertices);
-	//bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//bd.CPUAccessFlags = 0;
-
-	//D3D11_SUBRESOURCE_DATA initData = {};
-	//initData.pSysMem = vertices;
-
-	//ID3D11Buffer* vertexBufferX = nullptr;
-	//device->CreateBuffer(&bd, &initData, &vertexBufferX);
-
-	//// Ustawienie bufora wierzcho³ków
-	//UINT stride = sizeof(XVertex);
-	//UINT offset = 0;
-	//deviceContext->IASetVertexBuffers(0, 1, &vertexBufferX, &stride, &offset);
-
-	//float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	//deviceContext->ClearRenderTargetView(renderTargetView, clearColor);
-
-
-	//// Rysowanie trójk¹tów
-	////deviceContext->DrawIndexed(indexCount, 0, 0);
-	//deviceContext->DrawIndexed(3, 0, 0);
-
-
-
-
-	//// Render your scene here
-
-	//swapChain->Present(1, 0);
-	//*/
 }
 
 void WindowsWaveDirect::OnUpdateFrame() {
