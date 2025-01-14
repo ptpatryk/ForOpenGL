@@ -88,9 +88,9 @@ void obliczNormalne(
         punorm[i * N_Y + j].x = i;
         punorm[i * N_Y + j].y = j;
         punorm[i * N_Y + j].z = bb[i * N_Y + j].x * 20;
-        punorm[i * N_Y + j].nx = -normal.x;
-        punorm[i * N_Y + j].ny = -normal.y;
-        punorm[i * N_Y + j].nz = -normal.z;
+        punorm[i * N_Y + j].nx = normal.x;
+        punorm[i * N_Y + j].ny = normal.y;
+        punorm[i * N_Y + j].nz = normal.z;
     }
 
     if (i == 0 || i == N_X - 1 || j == 0 || j == N_Y - 1)

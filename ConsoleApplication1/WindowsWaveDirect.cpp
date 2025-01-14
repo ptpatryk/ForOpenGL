@@ -419,7 +419,7 @@ void WindowsWaveDirect::OnRenderFrame() {
 	XMFLOAT4 vLightDirs[2] =
 	{
 		//XMFLOAT4(-0.577f, 0.577f, -0.577f, 1.0f),
-		XMFLOAT4(1.2f, 1.0f, 30.0f, 1.0f), //ale bêdê wykorzystywa³ tylko to
+		XMFLOAT4(10.2f, 10.0f, -30.0f, 1.0f), //ale bêdê wykorzystywa³ tylko to
 		XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
 	};
 	XMFLOAT4 vLightColors[2] =
