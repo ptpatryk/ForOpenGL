@@ -34,7 +34,8 @@ float4 PS(PS_INPUT input) : SV_Target
     float4 finalColor = 0;
     
     // Oblicz oœwietlenie NdotL dla 2 œwiate³
-    for (int i = 0; i < 2; i++)
+    //for (int i = 0; i < 2; i++)
+    int i = 0;
     {
         float3 lightDir = normalize((float3) vLightPos[i] - (float3)input.Pos);
         finalColor += saturate(dot(lightDir, input.Norm) * vLightColor[i]);
