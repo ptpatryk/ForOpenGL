@@ -37,15 +37,7 @@ void WindowsWaveDirect::InitDirectCompute() {
     //blok ustawiaj¹ce sta³e w buforze ////////////////////////
 
     //zwiêkszyæ rozmiar aby rozmia ry³ wielokrotnoœci¹ 16 majtów - bo bufor musi byæ wielokrotnoœci¹ 16 bajtów, a jak ³aduje 32 bajty to mogê odwo³aæ siê do z³ej pamiêci
-    struct Constants
-    {
-        float dt;
-        float w;
-        int N_X;
-        int N_Y;
-        float zv;
-        float czas;
-    };
+
 
 
     D3D11_BUFFER_DESC bufferDesc = {};
@@ -62,7 +54,7 @@ void WindowsWaveDirect::InitDirectCompute() {
     constants.N_X = N_X;
     constants.N_Y = N_Y;
     constants.w = w;
-    constants.zv = 0.5f; //tu wartoœæ cos zale¿na od czasu
+    constants.zv = 0.0f; //tu wartoœæ cos zale¿na od czasu
 
 
     initData.pSysMem = &constants;
@@ -81,6 +73,19 @@ void WindowsWaveDirect::InitDirectCompute() {
 }
 
 void WindowsWaveDirect::RunKernel() {
+
+    //float mysin = sin(czas);
+
+    Constants constants;
+    constants.czas = czas;
+    constants.dt = dt;
+    constants.N_X = N_X;
+    constants.N_Y = N_Y;
+    constants.w = w;
+    constants.zv = sin(czas);
+
+    deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &constants, 0, 0);
+
     deviceContext->CSSetShader(computeShader1, NULL, 0);
     deviceContext->CSSetUnorderedAccessViews(0, 1, &aaUAV, NULL);
     deviceContext->CSSetUnorderedAccessViews(1, 1, &bbUAV, NULL);

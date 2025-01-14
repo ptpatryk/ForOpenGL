@@ -91,6 +91,15 @@ private:
         DirectX::XMFLOAT3 Normal;
     };
 
+    struct Constants
+    {
+        float dt;
+        float w;
+        int N_X;
+        int N_Y;
+        float zv;
+        float czas;
+    };
 
     Punkt* aa = nullptr;
     std::vector<UINT> indices;
