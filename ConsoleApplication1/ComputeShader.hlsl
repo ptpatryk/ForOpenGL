@@ -1,3 +1,5 @@
+//#include "All.fxh"
+
 struct Punkt
 {
     float m;
@@ -7,12 +9,8 @@ struct Punkt
 
 struct PunktNormal
 {
-    float x;
-    float y;
-    float z;
-    float nx;
-    float ny;
-    float nz;
+    float3 Pos;
+    float3 Norm;
 };
 
 cbuffer Constants : register(b1)
@@ -56,16 +54,13 @@ void obliczWspolrzedne(
     {
         bb[i * N_Y + j].x = 0.0;
         bb[i * N_Y + j].m = aa[i * N_Y + j].m;
-    }
-    
+    }   
 }
 
 [numthreads(1, 1, 1)]
 void obliczNormalne(
     RWStructuredBuffer<Punkt> bb : register(u0),
     RWStructuredBuffer<PunktNormal> punorm : register(u1),
-    //int N_X,
-    //int N_Y,
     uint3 threadID : SV_DispatchThreadID
 )
 {
@@ -85,23 +80,13 @@ void obliczNormalne(
 
         float3 normal = normalize(cross(dx, dy));
 
-        punorm[i * N_Y + j].x = i;
-        punorm[i * N_Y + j].y = j;
-        punorm[i * N_Y + j].z = bb[i * N_Y + j].x * 20;
-        punorm[i * N_Y + j].nx = normal.x;
-        punorm[i * N_Y + j].ny = normal.y;
-        punorm[i * N_Y + j].nz = normal.z;
+        punorm[i * N_Y + j].Pos = float3(i, j, bb[i * N_Y + j].x * 20);
+        punorm[i * N_Y + j].Norm = normal;       
     }
 
     if (i == 0 || i == N_X - 1 || j == 0 || j == N_Y - 1)
     {
-        punorm[i * N_Y + j].x = i;
-        punorm[i * N_Y + j].y = j;
-        punorm[i * N_Y + j].z = bb[i * N_Y + j].x * 20;
-        punorm[i * N_Y + j].nx = 0.0;
-        punorm[i * N_Y + j].ny = 0.0;
-        punorm[i * N_Y + j].nz = 1.0;
+        punorm[i * N_Y + j].Pos = float3(i, j, bb[i * N_Y + j].x * 20);
+        punorm[i * N_Y + j].Norm = float3(0, 0, 1);
     }
-    
-
 }
