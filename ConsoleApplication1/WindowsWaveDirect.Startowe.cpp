@@ -12,8 +12,8 @@ void WindowsWaveDirect::PrzygotujTablice()
 
     
     //tablice indeksów trójk¹tów dla punktów na p³aszczyŸnie
-    for (int i = 0; i < N_Y - 1; ++i) {
-        for (int j = 0; j < N_X - 1; ++j) {
+    for (int i = 1; i < N_Y-1; ++i) {
+        for (int j = 1; j < N_X-1; ++j) {
             // First triangle
             indices.push_back(i * N_Y + j);
             indices.push_back(i * N_Y + (j + 1));

@@ -46,7 +46,7 @@ void obliczWspolrzedne(
 
     if (czas < 12.56 && i == 50 && j == 50)
     {
-        bb[5050].v = zv;
+        bb[i * N_Y + j].v = zv;
         bb[i * N_Y + j].m = aa[i * N_Y + j].m;
     }
 

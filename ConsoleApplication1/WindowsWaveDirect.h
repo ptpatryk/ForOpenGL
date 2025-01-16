@@ -102,12 +102,12 @@ private:
     };
 
     Punkt* aa = nullptr;
-    std::vector<UINT> indices;
+    std::vector<int> indices;
     void PrzygotujTablice();
     //float czas = 0.0f;
     float dt = 0.01f, w = -2.0f, czas = 0.0f;;
-    int N_X = 100;
-    int N_Y = 100;
+    int N_X = 400;
+    int N_Y = 400;
 
     struct ConstantBuffer
     {
