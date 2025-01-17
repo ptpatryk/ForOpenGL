@@ -302,7 +302,19 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	// Ustawienia macierzy
 	//g_World = XMMatrixIdentity();
 	g_World = XMMatrixRotationY(3.4f);
+
+	// Dodanie translacji do macierzy œwiata
+	XMMATRIX translationMatrixWorld = XMMatrixTranslation(150.0f, 0.0f, 0.0f);
+	g_World = g_World * translationMatrixWorld;
+
 	g_View = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+	// Ustawienie macierzy widoku
+	g_View = XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+	// Dodanie translacji do macierzy widoku
+	XMMATRIX translationMatrixView = XMMatrixTranslation(-100.0f, -150.0f, 0.0f);
+	g_View = translationMatrixView * g_View;
 
 	// Ustawienie k¹tów obrotu
 	float angleZ = XMConvertToRadians(45.0f);
@@ -315,6 +327,16 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 
 	// Tworzenie macierzy rzutowania ortograficznego
 	g_Projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
+
+
+//// Tworzenie macierzy rzutowania ortograficznego
+//	XMMATRIX orthoMatrix = XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
+//
+//	// Dodanie translacji, aby przesun¹æ pocz¹tek uk³adu wspó³rzêdnych do lewego dolnego rogu
+//	XMMATRIX translationMatrix = XMMatrixTranslation(-150.0f, -150.0f, 0.0f);
+//
+//	// Po³¹czenie macierzy rzutowania ortograficznego z translacj¹
+//	g_Projection = rotationMatrix * orthoMatrix * translationMatrix;
 
 	// Setup our lighting parameters - pozmieniaæ ¿eby
 	XMFLOAT4 vLightDirs[2] =
