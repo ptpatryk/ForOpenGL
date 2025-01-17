@@ -134,10 +134,6 @@
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
     <ClCompile Include="Fale.cpp" />
-    <ClCompile Include="InitGLCL.cpp" />
-    <ClCompile Include="Source.cpp" />
-    <ClCompile Include="Source1.cpp" />
-    <ClCompile Include="Source2.cpp" />
     <ClCompile Include="WindowsWave.cpp" />
     <ClCompile Include="WindowsWaveDirect.Compute.cpp" />
     <ClCompile Include="WindowsWaveDirect.cpp" />
