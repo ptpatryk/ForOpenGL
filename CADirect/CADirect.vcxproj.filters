@@ -14,44 +14,43 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{8730c1d3-b51c-4a72-8a94-388dde21c3ee}</UniqueIdentifier>
+      <UniqueIdentifier>{878a71d3-fc71-412e-a1aa-ccb41af5231b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConsoleApplication1.cpp">
+    <ClCompile Include="CADirect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Fale.cpp">
+    <ClCompile Include="WindowsWaveDirect.Compute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsWave.cpp">
+    <ClCompile Include="WindowsWaveDirect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsWaveDirect.Startowe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsWaveDirect.utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="vertex_shader.glsl">
+    <FxCompile Include="ComputeShader.hlsl">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="kernel.cl">
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="fragment_shader.glsl">
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
-    </None>
+    </FxCompile>
+    <FxCompile Include="All.fxh">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Fale.h">
+    <ClInclude Include="WindowsWaveDirect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsWave.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="Text.txt" />
-    <Text Include="Wycofane.txt">
-      <Filter>Source Files</Filter>
-    </Text>
   </ItemGroup>
 </Project>

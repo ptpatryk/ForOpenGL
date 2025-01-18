@@ -15,7 +15,19 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_09425E6F53394CF9B817C5A8ADE967BE"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_322618B8132B41E884DFE0D2FC38068D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_3266ED57F720410B8A0D82A6E1218FE3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -45,8 +57,14 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_82D65614B6197EBF6790AA1122C3EE3B"
+        "MsmKey" = "8:_6165BF1663ADBCBC6CE4E520FC821553"
         "OwnerKey" = "8:_322618B8132B41E884DFE0D2FC38068D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_631527F3E747450691CD5FF8166E8642"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -57,14 +75,38 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_9AE2B4068F4A49939B109DE3609359B6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A2A0BE20FD28AEFC1D6793EC9B5A45F3"
+        "OwnerKey" = "8:_322618B8132B41E884DFE0D2FC38068D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AF563766F014446DBF5671F60984828E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_BB0AF72FCB676CFE491385C8067E48AB"
         "OwnerKey" = "8:_322618B8132B41E884DFE0D2FC38068D"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E0332F591C1108BA1D12EFF31C1CF289"
-        "OwnerKey" = "8:_322618B8132B41E884DFE0D2FC38068D"
+        "MsmKey" = "8:_C5E57B9F354C4603B01654B9BDE71AAB"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F940C87E786447AFABC2CA5F9106877A"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -85,6 +127,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
+            }
         }
         "Release"
         {
@@ -101,6 +159,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -122,6 +188,46 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_09425E6F53394CF9B817C5A8ADE967BE"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\PixelShader.hlsl"
+            "TargetName" = "8:PixelShader.hlsl"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3266ED57F720410B8A0D82A6E1218FE3"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\All.fxh"
+            "TargetName" = "8:All.fxh"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_391F2DBF12407B7D5C08907DBC07EA4D"
             {
             "SourcePath" = "8:OPENGL32.dll"
@@ -202,10 +308,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_82D65614B6197EBF6790AA1122C3EE3B"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6165BF1663ADBCBC6CE4E520FC821553"
             {
-            "SourcePath" = "8:freeglutd.dll"
-            "TargetName" = "8:freeglutd.dll"
+            "SourcePath" = "8:D3DCOMPILER_47.dll"
+            "TargetName" = "8:D3DCOMPILER_47.dll"
             "Tag" = "8:"
             "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
             "Condition" = "8:"
@@ -220,6 +326,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_631527F3E747450691CD5FF8166E8642"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\fragment_shader.glsl"
+            "TargetName" = "8:fragment_shader.glsl"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8A9892BF0ABE47D5309940DAE2D8DF65"
@@ -242,6 +368,66 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9AE2B4068F4A49939B109DE3609359B6"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\VertexShader.hlsl"
+            "TargetName" = "8:VertexShader.hlsl"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A2A0BE20FD28AEFC1D6793EC9B5A45F3"
+            {
+            "SourcePath" = "8:d3d11.dll"
+            "TargetName" = "8:d3d11.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AF563766F014446DBF5671F60984828E"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\vertex_shader.glsl"
+            "TargetName" = "8:vertex_shader.glsl"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BB0AF72FCB676CFE491385C8067E48AB"
             {
             "SourcePath" = "8:VCRUNTIME140D.dll"
@@ -262,10 +448,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E0332F591C1108BA1D12EFF31C1CF289"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C5E57B9F354C4603B01654B9BDE71AAB"
             {
-            "SourcePath" = "8:GLU32.dll"
-            "TargetName" = "8:GLU32.dll"
+            "SourcePath" = "8:..\\ConsoleApplication1\\ComputeShader.hlsl"
+            "TargetName" = "8:ComputeShader.hlsl"
             "Tag" = "8:"
             "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
             "Condition" = "8:"
@@ -279,7 +465,27 @@
             "PackageAs" = "3:1"
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F940C87E786447AFABC2CA5F9106877A"
+            {
+            "SourcePath" = "8:..\\ConsoleApplication1\\kernel.cl"
+            "TargetName" = "8:kernel.cl"
+            "Tag" = "8:"
+            "Folder" = "8:_45295CD427ED40AC877BF37C90B79A05"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
         }
