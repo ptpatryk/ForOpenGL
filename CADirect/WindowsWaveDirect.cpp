@@ -326,7 +326,8 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	XMMATRIX rotationMatrix = rotationMatrixZ * rotationMatrixX;
 
 	// Tworzenie macierzy rzutowania ortograficznego
-	g_Projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -50.0f, 50.0f);
+	g_Projection = rotationMatrix * XMMatrixOrthographicLH(300.0f, 300.0f, -150.0f, 150.0f);
+	//g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV4, width / (FLOAT)height, 0.01f, 100.0f);
 
 
 //// Tworzenie macierzy rzutowania ortograficznego
