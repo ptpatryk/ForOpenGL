@@ -137,34 +137,7 @@ void WindowsWaveDirect::RunKernel() {
     //{
     //    // Obs≥uga b≥Ídu
     //}
-   
 
-    /*
-    ID3D11Buffer* stagingBuffer = CreateAndCopyToDebugBuf(device, deviceContext, bbBuffer);
-
-    deviceContext->CopyResource(stagingBuffer, bbBuffer);
-
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    HRESULT hr = deviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
-    if (SUCCEEDED(hr))
-    {
-        // Uzyskaj wskaünik do danych
-        Punkt * dane = reinterpret_cast<Punkt*>(mappedResource.pData);
-        //Punkt[] dane = (Punkt[])mappedResource.pData;
-
-
-        // Przetwarzaj dane
-        // ...
-
-        // Odmapuj bufor
-        deviceContext->Unmap(stagingBuffer, 0);
-    }
-    else
-    {
-        // Obs≥uga b≥Ídu
-    }
-
-    */
     int i = 0;
 }
 

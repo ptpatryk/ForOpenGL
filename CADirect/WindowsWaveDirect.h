@@ -27,9 +27,7 @@ private:
     void OnUpdateFrame();
     void RunKernel();
 
-    HRESULT TworzenieBuforaGlebi();
     HRESULT VPShaderTworz();
-    void UstawienieMaciezySwiata();
     void UstawienieViewPort();
     HRESULT TworzenieBuforaTylniego();
     HRESULT UzupelnienieBuforuTrojkatemIBuforIndeksow();
