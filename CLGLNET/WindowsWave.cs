@@ -35,8 +35,8 @@ namespace CLGLNET
 
         int tr = 2;
 
-        int N_X = 100;
-        int N_Y = 100;
+        uint N_X = 100;
+        uint N_Y = 100;
         float dt = 0.01f;
         float w = -2.0f;
         //PunktNormal[] punktyINormalne;
@@ -142,10 +142,13 @@ namespace CLGLNET
             GL.UniformMatrix4(GL.GetUniformLocation(_shaderProgram, "projection"), false, ref projection);
 
             GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 36);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, N_X * N_Y * 36);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
         }
+
+        uint[] indices;
 
         void InitOpenGL()
         {
@@ -174,17 +177,86 @@ namespace CLGLNET
             GL.GenBuffers(1, out nbo);
             CheckGLError("Tworzenie Bufora");
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18*tr, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * N_X * N_Y * 18*tr, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, (int)(sizeof(float) * N_X * N_Y*8), IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
+            //--------------------------------------------------------------------------------
+
+            List<uint> Lindices = new List<uint>();
+            
+            for (uint i = 1; i < N_Y - 1; ++i)
+            {
+                for (uint j = 1; j < N_X - 1; ++j)
+                {
+                    // First triangle
+                    Lindices.Add(i * N_Y + j);
+                    Lindices.Add(i * N_Y + (j + 1));
+                    Lindices.Add((i + 1) * N_Y + j);
+
+                    // Second triangle
+                    Lindices.Add((i + 1) * N_Y + j);
+                    Lindices.Add(i * N_Y + (j + 1));
+                    Lindices.Add((i + 1) * N_Y + (j + 1));
+                }
+            }
+
+            indices = Lindices.ToArray();
+
+            //int vertexBufferObject = GL.GenBuffer();
+            //int elementBufferObject = GL.GenBuffer();
+
+            ////GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
+            ////GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            //GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            //GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+
+
+            //--------------------------------------------------------------------------------
+
+            //wykomentowałem to z mojego orginału
+
+            //_vertexArrayObject = GL.GenVertexArray();
+            //GL.BindVertexArray(_vertexArrayObject);
+
+            //GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+            //GL.EnableVertexAttribArray(0);
+
+            //GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+            //GL.EnableVertexAttribArray(1);
+            //CheckGLError("Ostatnia linia");
+
+
+
+            //--------------------------------------------------------------------------------
+
+
+            // Utworzenie i wiązanie VAO
             _vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayObject);
 
+            //// Utworzenie i wypełnienie VBO danymi wierzchołków
+            //int vertexBufferObject = GL.GenBuffer();
+            //GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
+            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+            // Utworzenie i wypełnienie EBO danymi indeksów
+            int elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+            // Atrybut pozycji wierzchołka
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
+            // Atrybut normalnej wierzchołka
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-            CheckGLError("Ostatnia linia");
+
+            // Odwiązanie VAO (opcjonalne)
+            GL.BindVertexArray(0);
+
         }
 
         void InitOpenCL()
@@ -234,8 +306,8 @@ namespace CLGLNET
             kernelTrujkatow = CL.CreateKernel(program, "obliczNormalne", out res);
             CheckResult(res);
 
-            kernelPrzygotujTrojkaty = CL.CreateKernel(program, "przygotujTrojkaty", out res);
-            CheckResult(res);
+            //kernelPrzygotujTrojkaty = CL.CreateKernel(program, "przygotujTrojkaty", out res);
+            //CheckResult(res);
 
             // Dane wejściowe
             Punkt[] b = new Punkt[N_X * N_Y];  //może w miejscu b dać aa
@@ -249,14 +321,15 @@ namespace CLGLNET
             bbBuf = CL.CreateBuffer<Punkt>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, b, out res);
             CheckResult(res);
 
-            clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, c, out res);
+            //clNbo = CL.CreateBuffer<PunktNormal>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, c, out res);
+            clNbo = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
             CheckResult(res);
 
             //vertexBuffer = CL.CreateBuffer<float>(context, MemoryFlags.ReadWrite | MemoryFlags.CopyHostPtr, d, out res);
             //CheckResult(res);
             // Utwórz bufor współdzielony między OpenCL i OpenGL
-            vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
-            CheckResult(res);
+            //vertexBuffer = CreateFromGLBuffer(context, MemoryFlags.ReadWrite, nbo, out res);
+            //CheckResult(res);
 
             //TvertexBuffer = new[] { vertexBuffer };
         }
@@ -299,10 +372,10 @@ namespace CLGLNET
                 CL.SetKernelArg(kernelTrujkatow, 2, N_X);
                 CL.SetKernelArg(kernelTrujkatow, 3, N_Y);
 
-                CL.SetKernelArg(kernelPrzygotujTrojkaty, 0, clNbo);
-                CL.SetKernelArg(kernelPrzygotujTrojkaty, 1, vertexBuffer);
-                CL.SetKernelArg(kernelPrzygotujTrojkaty, 2, N_X);
-                CL.SetKernelArg(kernelPrzygotujTrojkaty, 3, N_Y);
+                //CL.SetKernelArg(kernelPrzygotujTrojkaty, 0, clNbo);
+                //CL.SetKernelArg(kernelPrzygotujTrojkaty, 1, vertexBuffer);
+                //CL.SetKernelArg(kernelPrzygotujTrojkaty, 2, N_X);
+                //CL.SetKernelArg(kernelPrzygotujTrojkaty, 3, N_Y);
 
                 //GL.Finish();
 
@@ -323,8 +396,8 @@ namespace CLGLNET
                 CL.ReleaseEvent(dozwolnienia);
                 //CheckResult(res);
 
-                res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out dozwolnienia);
-                CL.ReleaseEvent(dozwolnienia);
+                //res = CL.EnqueueNDRangeKernel(queue, kernelPrzygotujTrojkaty, liczbaWymiarow, null, globalWorkSize, null, 0, null, out dozwolnienia);
+                //CL.ReleaseEvent(dozwolnienia);
                 //CheckResult(res);
 
                 //CL.EnqueueReadBuffer(queue, vertexBuffer, true, UIntPtr.Zero, vertices, null, out CLEvent _);

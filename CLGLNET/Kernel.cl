@@ -46,8 +46,8 @@ __kernel void obliczNormalne(__global Punkt* bb, __global PunktNormal* punorm, i
         float3 normal = cross(dx, dy);
         normal = normalize(normal);
 
-        punorm[i * N_Y + j].x = i;
-        punorm[i * N_Y + j].y = j;
+        punorm[i * N_Y + j].x = i - 40.0f;
+        punorm[i * N_Y + j].y = j - 40.0f;
         punorm[i * N_Y + j].z = bb[i * N_Y + j].x*20;
         punorm[i * N_Y + j].nx = normal.x;
         punorm[i * N_Y + j].ny = normal.y;
@@ -55,8 +55,8 @@ __kernel void obliczNormalne(__global Punkt* bb, __global PunktNormal* punorm, i
     }
 
     if (i == 0 || i == N_X-1 || j == 0 || j == N_Y-1) {
-        punorm[i * N_Y + j].x = i;
-        punorm[i * N_Y + j].y = j;
+        punorm[i * N_Y + j].x = i - 40.0f;
+        punorm[i * N_Y + j].y = j - 40.0f;
         punorm[i * N_Y + j].z = bb[i * N_Y + j].x*20;
         punorm[i * N_Y + j].nx = 0.0;
         punorm[i * N_Y + j].ny = 0.0;
