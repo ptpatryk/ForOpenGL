@@ -24,6 +24,7 @@ private:
     HRESULT InitDirectX();
     void InitDirectCompute();
     void OnRenderFrame();
+    void OnRenderFrame(bool executeShaders);
     void OnUpdateFrame();
     void RunKernel();
 
@@ -106,6 +107,9 @@ private:
     float dt = 0.01f, w = -2.0f, czas = 0.0f;;
     int N_X = 400;
     int N_Y = 400;
+
+    int liczmik = 0;
+
 
     struct ConstantBuffer
     {
