@@ -317,7 +317,7 @@ HRESULT WindowsWaveDirect::UstawienieMaciezy()
 	g_View = translationMatrixView * g_View;
 
 	// Ustawienie k¹tów obrotu
-	float angleZ = XMConvertToRadians(45.0f);
+    constexpr float angleZ = XMConvertToRadians(45.0f);
 	float angleX = XMConvertToRadians(30.0f);
 
 	// Tworzenie macierzy obrotu
@@ -394,6 +394,33 @@ void WindowsWaveDirect::OnRenderFrame() {
 	swapChain->Present(0, 0);
 }
 
+void WindowsWaveDirect::OnRenderFrame(bool executeShaders) {
+	//
+	// Clear the back buffer
+	//
+	deviceContext->ClearRenderTargetView(renderTargetView, Colors::MidnightBlue);
+
+	//
+	// Clear the depth buffer to 1.0 (max depth)
+	//
+	deviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	if (executeShaders) {
+		//
+		// Render the cube
+		//
+		deviceContext->VSSetShader(vertexShader, nullptr, 0);
+		deviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+		deviceContext->PSSetShader(pixelShader, nullptr, 0);
+		deviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+	}
+
+	deviceContext->DrawIndexed(2 * 3 * N_X * N_Y, 0, 0);
+
+	swapChain->Present(0, 0);
+}
+
+
 void WindowsWaveDirect::OnUpdateFrame() {
 	RunKernel();
 	czas += dt;
@@ -409,6 +436,7 @@ void WindowsWaveDirect::Run() {
 		else {
 			OnUpdateFrame();
 			OnRenderFrame();
+
 		}
 	}
 }
