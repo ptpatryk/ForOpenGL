@@ -1,51 +1,143 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using System.ComponentModel.DataAnnotations;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using Tensorflow.Keras;
-using Tensorflow;
 using Keras.Datasets;
 using Keras.Layers;
 using Keras.Models;
 using Keras.Utils;
 using Numpy;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Tensorflow;
+using Tensorflow.Keras;
+using TorchSharp;
+using static TorchSharp.torch;
 
-Console.WriteLine("Hello, World!");
+//Console.WriteLine("Hello, World!");
 
-// USTAWIENIE PYTHONNET PRZED INICJACJĄ pythonnet/Keras
-EnsurePythonForPythonNet();
+using System;
 
-// Zdefiniuj zmienne wejściowe i wyjściowe
-var inputData = new float[4, 2]
+        // ===== Konfiguracja urządzenia (CPU/CUDA) =====
+        var device = torch.cuda.is_available() ? torch.CUDA : torch.CPU;
+        Console.WriteLine($"Uruchamiam na: {(device.type == DeviceType.CUDA ? "CUDA" : "CPU")}");
+
+        // Opcjonalnie: deterministyczność / seed
+        torch.random.manual_seed(1234);
+
+        // ===== Dane XOR =====
+        // input: 4 próbki po 2 cechy
+        var xData = new float[] {
+            0f, 0f,
+            0f, 1f,
+            1f, 0f,
+            1f, 1f
+        };
+        var yData = new float[] {
+            0f,
+            1f,
+            1f,
+            0f
+        };
+
+        // Tworzymy tensory o kształtach [4,2] i [4,1]
+        var x = torch.tensor(xData, new long[] { 4, 2 }, dtype: ScalarType.Float32).to(device);
+        var y = torch.tensor(yData, new long[] { 4, 1 }, dtype: ScalarType.Float32).to(device);
+
+        // ===== Definicja modelu (Sequential) =====
+        var model = torch.nn.Sequential(
+            ("fc1", torch.nn.Linear(2, 2)),     // Dense(2, activation='sigmoid', input_shape=2)
+            ("sig1", torch.nn.Sigmoid()),
+            ("fc2", torch.nn.Linear(2, 1)),     // Dense(1, activation='sigmoid')
+            ("sig2", torch.nn.Sigmoid())
+        ).to(device);
+
+        // ===== Strata i optymalizator =====
+        var lossFn = torch.nn.MSELoss();       // mean_squared_error
+        var optimizer = torch.optim.SGD(model.parameters(), learningRate: 0.1f);
+
+        // ===== Trening =====
+        model.train();
+        int epochs = 1000;
+
+        for (int epoch = 1; epoch <= epochs; epoch++)
+        {
+            // forward
+            using var yhat = model.forward(x);
+            using var loss = lossFn.forward(yhat, y);
+
+            // backward + update
+            optimizer.zero_grad();
+            loss.backward();
+            optimizer.step();
+
+            // log co 100 epok
+            if (epoch % 100 == 0)
+            {
+                // ToSingle() działa dla skalara; dla tensora 1x1 można też użyć .ToArray<float>()[0]
+                Console.WriteLine($"Epoka {epoch}, loss = {loss.ToSingle()}");
+            }
+        }
+
+// ===== Predykcja =====
+/*
+model.eval();
+using var sample = torch.tensor(new float[] { 0f, 1f }, new long[] { 1, 2 }, dtype: ScalarType.Float32).to(device);
+using var pred = model.forward(sample);
+
+// ekstrakcja wartości z tensora [1,1]
+var predVal = pred[0,0].ToString();
+Console.WriteLine($"Predykcja dla [0,1] = {predVal:F4}");
+
+Console.WriteLine("Predykcja wykonana.");
+*/
+
+
+model.eval();
+using var sample = torch.tensor(new float[] { 0f, 1f }, new long[] { 1, 2 }, dtype: ScalarType.Float32).to(device);
+using var pred = model.forward(sample);
+
+// tensor [1,1] → pobierz element [0,0] i zrób skalar
+float predVal = pred[0, 0].ToSingle();
+Console.WriteLine($"Predykcja dla [0,1] = {predVal:F4}");
+
+
+
+void UzycieBibliotekiWymagajacejPythona()
 {
+    // USTAWIENIE PYTHONNET PRZED INICJACJĄ pythonnet/Keras
+    EnsurePythonForPythonNet();
+
+    // Zdefiniuj zmienne wejściowe i wyjściowe
+    var inputData = new float[4, 2]
+    {
             { 0, 0 },
             { 0, 1 },
             { 1, 0 },
             { 1, 1 }
-};
-var outputData = new float[4, 1]
-{
+    };
+    var outputData = new float[4, 1]
+    {
             { 0 },
             { 1 },
             { 1 },
             { 0 }
-};
+    };
 
-// Stwórz graf obliczeniowy TensorFlow (Keras.NET)
-using (var model = new Sequential())
-{
-    model.Add(new Dense(2, activation: "sigmoid", input_shape: 2));
-    model.Add(new Dense(1, activation: "sigmoid"));
+    // Stwórz graf obliczeniowy TensorFlow (Keras.NET)
+    using (var model = new Sequential())
+    {
+        model.Add(new Dense(2, activation: "sigmoid", input_shape: 2));
+        model.Add(new Dense(1, activation: "sigmoid"));
 
-    model.Compile(optimizer: "sgd", loss: "mean_squared_error");
-    model.Fit(inputData, outputData, epochs: 1000);
+        model.Compile(optimizer: "sgd", loss: "mean_squared_error");
+        model.Fit(inputData, outputData, epochs: 1000);
 
-    var prediction = model.Predict(new float[,] { { 0, 1 } });
-    Console.WriteLine("Predykcja wykonana.");
+        var prediction = model.Predict(new float[,] { { 0, 1 } });
+        Console.WriteLine("Predykcja wykonana.");
+    }
 }
 
 static void EnsurePythonForPythonNet()
