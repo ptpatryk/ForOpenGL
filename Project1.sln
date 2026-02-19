@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35521.163
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11512.155 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.vcxproj", "{EC57CF28-B7C2-4362-8592-67B4E70AB0FA}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CADirect", "CADirect\CADirect.vcxproj", "{F4ABE377-D09C-464C-B684-253C59FA9F21}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SetupDir", "SetupDir\SetupDir.vdproj", "{7FA72799-A9B4-4CA5-8B53-32EBBF028952}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenGL", "OpenGL", "{72C435AE-2B4D-47E7-8172-326A704E8B6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -120,8 +122,12 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{27BE54A1-849B-4294-BC89-0A2134B7238C} = {00000000-0000-0000-0000-000000000000}
-		{A9D58095-920B-48CC-A5BF-FFC8C41C1881} = {00000000-0000-0000-0000-000000000000}
-		{A8CA739D-3014-4732-9A8A-AD21FBD96617} = {00000000-0000-0000-0000-000000000000}
+		{EC57CF28-B7C2-4362-8592-67B4E70AB0FA} = {72C435AE-2B4D-47E7-8172-326A704E8B6E}
+		{27BE54A1-849B-4294-BC89-0A2134B7238C} = {A63AC5A7-0FAE-47C3-AF47-6612029A78FC}
+		{A9D58095-920B-48CC-A5BF-FFC8C41C1881} = {A63AC5A7-0FAE-47C3-AF47-6612029A78FC}
+		{A8CA739D-3014-4732-9A8A-AD21FBD96617} = {A63AC5A7-0FAE-47C3-AF47-6612029A78FC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {39CCB3A4-9DFA-41DB-B18B-3590DC759438}
 	EndGlobalSection
 EndGlobal
