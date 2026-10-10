@@ -1,0 +1,82 @@
+﻿@page "/counter"
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@page "/wave"
+
+<PageTitle>Symulacja fali WebGPU</PageTitle>
+
+<div style="height: 800px">
+    <WaveWebGpu @ref="_wave"
+                Width="1200"
+                Height="800"
+                NX="100"
+                NY="100"
+                Dt="0.1f"
+                W="0.001f" />
+</div>
+
+<div class="mt-3 d-flex gap-2">
+    <button class="btn btn-success"
+            @onclick="Start">
+        Start
+    </button>
+
+    <button class="btn btn-warning"
+            @onclick="Stop">
+        Stop
+    </button>
+
+    <button class="btn btn-secondary"
+            @onclick="Reset">
+        Reset
+    </button>
+
+    <button class="btn btn-primary"
+            @onclick="IncreaseAmplitude">
+        Większa amplituda
+    </button>
+</div>
+
+@code {
+    private WaveWebGpu? _wave;
+
+    private Task Start()
+    {
+        return _wave?.StartAsync() ?? Task.CompletedTask;
+    }
+
+    private Task Stop()
+    {
+        return _wave?.StopAsync() ?? Task.CompletedTask;
+    }
+
+    private Task Reset()
+    {
+        return _wave?.ResetAsync() ?? Task.CompletedTask;
+    }
+
+    private Task IncreaseAmplitude()
+    {
+        return _wave?.SetParametersAsync(
+            amplitude: 2.0f
+        ) ?? Task.CompletedTask;
+    }
+}
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}
+

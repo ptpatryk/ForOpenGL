@@ -1,0 +1,128 @@
+﻿@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="wave-container">
+    <canvas @ref="_canvas"
+            class="wave-canvas"
+            width="@Width"
+            height="@Height">
+    </canvas>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <div class="alert alert-danger mt-2">
+            @_error
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Width { get; set; } = 1000;
+
+    [Parameter]
+    public int Height { get; set; } = 700;
+
+    [Parameter]
+    public int NX { get; set; } = 100;
+
+    [Parameter]
+    public int NY { get; set; } = 100;
+
+    [Parameter]
+    public float Dt { get; set; } = 0.016f;
+
+    [Parameter]
+    public float W { get; set; } = 1.0f;
+
+    private ElementReference _canvas;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _wave;
+    private string? _error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./js/wave-webgpu.js");
+
+            _wave = await _module.InvokeAsync<IJSObjectReference>(
+                "createWave",
+                _canvas,
+                new
+                {
+                    nx = NX,
+                    ny = NY,
+                    dt = Dt,
+                    w = W
+                });
+
+            await _wave.InvokeVoidAsync("start");
+        }
+        catch (JSException ex)
+        {
+            _error = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    public async Task StartAsync()
+    {
+        if (_wave is not null)
+            await _wave.InvokeVoidAsync("start");
+    }
+
+    public async Task StopAsync()
+    {
+        if (_wave is not null)
+            await _wave.InvokeVoidAsync("stop");
+    }
+
+    public async Task ResetAsync()
+    {
+        if (_wave is not null)
+            await _wave.InvokeVoidAsync("reset");
+    }
+
+    public async Task SetParametersAsync(
+        float? dt = null,
+        float? w = null,
+        float? amplitude = null)
+    {
+        if (_wave is null)
+            return;
+
+        await _wave.InvokeVoidAsync(
+            "setParameters",
+            new
+            {
+                dt,
+                w,
+                amplitude
+            });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_wave is not null)
+            {
+                await _wave.InvokeVoidAsync("dispose");
+                await _wave.DisposeAsync();
+            }
+
+            if (_module is not null)
+                await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Normalne podczas zamykania obwodu Blazor Server.
+        }
+    }
+}
