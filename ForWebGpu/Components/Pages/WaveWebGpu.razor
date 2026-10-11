@@ -24,16 +24,16 @@
     public int Height { get; set; } = 700;
 
     [Parameter]
-    public int NX { get; set; } = 100;
+    public int NX { get; set; } = 400;
 
     [Parameter]
-    public int NY { get; set; } = 100;
+    public int NY { get; set; } = 400;
 
     [Parameter]
-    public float Dt { get; set; } = 0.016f;
+    public float Dt { get; set; } = 0.01f;
 
     [Parameter]
-    public float W { get; set; } = 1.0f;
+    public float W { get; set; } = -2.0f;
 
     private ElementReference _canvas;
     private IJSObjectReference? _module;

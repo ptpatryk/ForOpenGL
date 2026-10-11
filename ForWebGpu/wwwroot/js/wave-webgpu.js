@@ -355,8 +355,8 @@ class WaveWebGpu {
         this.ny = Math.max(3, Number(options.ny ?? 100));
 
         this.dt = Number(options.dt ?? 0.016);
-        this.w = Number(options.w ?? 1.0);
-        this.amplitude = Number(options.amplitude ?? 1.0);
+        this.w = Number(options.w ?? -2.0);
+        this.amplitude = Number(options.amplitude ?? 0.8);
 
         this.time = 0;
         this.frameNumber = 0;
@@ -766,7 +766,13 @@ class WaveWebGpu {
         uints[2] = this.nx;
         uints[3] = this.ny;
 
-        floats[4] = Math.sin(this.time) * this.amplitude;
+        //floats[4] = Math.sin(this.time) * this.amplitude;
+
+        floats[4] =
+            this.time < 12.56
+            ? Math.sin(this.time) * this.amplitude
+                : 0.0;
+
         floats[5] = this.time;
         floats[6] = 0;
         floats[7] = 0;
