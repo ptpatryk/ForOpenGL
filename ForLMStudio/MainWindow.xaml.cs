@@ -205,6 +205,12 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
             }
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
+            
+            var wynik = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
+
+            return wynik.Choices.FirstOrDefault()?.Message.Content;
+
+            /*
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -218,6 +224,7 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
                 .GetProperty("message")
                 .GetProperty("content")
                 .GetString() ?? "";
+            */
         }
     }
 
