@@ -42,6 +42,7 @@ namespace ForLMStudio
                 //Endpoint = "http://192.168.100.5:1234/v1",
                 Endpoint = "http://127.0.0.1:1234/v1",
                 Model = "llama-3.3-70b-instruct"
+                // w pracy używam qwen/3.5-9b
             };
 
             IChatProvider provider = new OpenAiCompatibleChatProvider(
