@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.Data;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,19 +25,18 @@ namespace ForLMStudio
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Agent agent;
+        private HttpClient httpClient;
+
         public MainWindow()
         {
             InitializeComponent();
-        }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            var httpClient = new HttpClient
+            httpClient = new HttpClient
             {
                 Timeout = Timeout.InfiniteTimeSpan
             };
 
-            //todo:mam inny model, a to i tak działa - dziwne
             var settings = new ChatProviderSettings
             {
                 //Endpoint = "http://192.168.100.5:1234/v1",
@@ -50,15 +51,24 @@ namespace ForLMStudio
                 settings.ApiKey,
                 settings.SystemPrompt);
 
-            var agent = new Agent(provider);
+            agent = new Agent(provider);
+
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+            //todo:mam inny model, a to i tak działa - dziwne
 
             DateTime dt = DateTime.Now;
 
-            var answer = await agent.AskAsync("Napisz krótko czym jest AI.");
+            var answer = await agent.AskAsync(TBWejscie.Text);
 
-            TBWyjscie.Text = $"{(DateTime.Now - dt):mm\\:ss}s.\r\n{answer}";        
+            TBWyjscie.Text = $"{(DateTime.Now - dt):mm\\:ss}s.\r\n{answer}";
         }
     }
+
+    #region klasy dla odpowiedzi
 
     public class ChatCompletionResponse
     {
@@ -80,19 +90,34 @@ namespace ForLMStudio
         public string Content { get; set; }
     }
 
+    #endregion
+
+    public class ForMessage
+    {
+        public string role { get; set; }
+        public string content { get; set; }
+    }
+
+
     public interface IChatProvider
     {
         Task<string> SendAsync(string userMessage, string? systemPrompt = null, CancellationToken cancellationToken = default);
     }
 
- 
-public sealed class OpenAiCompatibleChatProvider : IChatProvider
+
+
+
+    public sealed class OpenAiCompatibleChatProvider : IChatProvider
     {
         private readonly HttpClient _httpClient;
         private readonly string _endpoint;
         private readonly string _model;
         private readonly string _apiKey;
         private readonly string _defaultSystemPrompt;
+        private Dictionary<int, List<Choice>> _choices = new Dictionary<int, List<Choice>>();
+        private Dictionary<int, string> _pytanie = new Dictionary<int, string>();
+
+        private int lichnikChois = 0;
 
         public OpenAiCompatibleChatProvider(
             HttpClient httpClient,
@@ -116,13 +141,43 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
             var requestBody = new
             {
                 model = _model,
-                messages = new[]
-                {
-                new { role = "system", content = systemPrompt ?? _defaultSystemPrompt },
-                new { role = "user", content = userMessage }
-            },
+                messages = new List<ForMessage>(),
+                //{
+                //new { role = "system", content = systemPrompt ?? _defaultSystemPrompt },
+                //new { role = "user", content = userMessage }
+                //},
                 temperature = 0.7
             };
+
+            requestBody.messages.Add(new ForMessage()
+            {
+                role = "system",
+                content = systemPrompt ?? _defaultSystemPrompt
+            });
+
+            foreach (var kur in _choices)
+            {
+                requestBody.messages.Add(new ForMessage()
+                {
+                    role = "user",
+                    content = _pytanie[kur.Key]
+                });
+
+
+                requestBody.messages.Add(new ForMessage()
+                {
+                    role = "assistant",
+                    content = kur.Value?.FirstOrDefault()?.Message?.Content ?? string.Empty,
+                });
+            }
+            _pytanie.Add(lichnikChois, userMessage);
+
+            requestBody.messages.Add(new ForMessage()
+            {
+                role = "user",
+                content = userMessage
+            });
+
 
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{_endpoint}/chat/completions");
             request.Content = JsonContent.Create(requestBody);
@@ -133,8 +188,10 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
             }
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
-            
+
             var wynik = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>();
+
+            _choices.Add(lichnikChois++, wynik.Choices);
 
             return wynik.Choices.FirstOrDefault()?.Message.Content;
 
