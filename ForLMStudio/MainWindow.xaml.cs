@@ -106,12 +106,15 @@ namespace ForLMStudio
 
             var settings = new ChatProviderSettings
             {
-                Endpoint = "http://192.168.100.5:1234/v1",
+                //Endpoint = "http://192.168.100.5:1234/v1",
+                Endpoint = "http://127.0.0.1:1234/v1",
                 Model = "llama-3.3-70b-instruct"
             };
 
+            httpClient.Timeout = Timeout.InfiniteTimeSpan;
+
             IChatProvider provider = new OpenAiCompatibleChatProvider(
-                new HttpClient(),
+                httpClient,
                 settings.Endpoint,
                 settings.Model,
                 settings.ApiKey,
@@ -119,8 +122,13 @@ namespace ForLMStudio
 
             var agent = new Agent(provider);
 
+            DateTime dt = DateTime.Now;
+
             var answer = await agent.AskAsync("Napisz krótko czym jest AI.");
-            Console.WriteLine(answer);
+
+            TBWyjscie.Text = $"{(DateTime.Now - dt):mm\\:ss}s.\r\n{answer}";
+            
+            //Console.WriteLine(answer);
 
 
             //        IChatProvider provider = new OpenAiCompatibleChatProvider(
