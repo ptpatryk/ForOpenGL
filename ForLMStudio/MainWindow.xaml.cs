@@ -15,8 +15,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 
 namespace ForLMStudio
 {
@@ -32,86 +30,18 @@ namespace ForLMStudio
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            //        //var message = new List<ChatMessage>
-            //        //{
-            //        //    new(ChatRole.System, "Jesteś pomocnym asystentem."),
-            //        //    new(ChatRole.User, TBWejscie.Text)
-            //        //};
+            var httpClient = new HttpClient
+            {
+                Timeout = Timeout.InfiniteTimeSpan
+            };
 
-            //        var httpClient = new HttpClient();
-
-            //        //using Microsoft.Extensions.AI;
-            //        //using OpenAI;
-
-            //        var openAiClient = new OpenAIClient(
-            //            new ApiKeyCredential("lm-studio"));
-
-            //        var chatClient = openAiClient.AsChatClient(
-            //            modelId: "llama-3.3-70b-instruct",
-            //            endpoint: new Uri("http://192.168.100.5:1234/v1"));
-
-            //        //var request = new
-            //        //{
-            //        //    //model = "qwen2.5-7b-instruct",
-            //        //    model = "llama-3.3-70b-instruct",
-            //        //    messages = message   
-            //        //};
-
-            //        var request = new
-            //        {
-            //            model = "llama-3.3-70b-instruct",
-            //            messages = new[]
-            //{
-            //    new
-            //    {
-            //        role = "system",
-            //        content = "Jesteś pomocnym asystentem."
-            //    },
-            //    new
-            //    {
-            //        role = "user",
-            //        content = TBWejscie.Text
-            //    }
-            //}
-            //        };
-
-
-            //        var response = await httpClient.PostAsJsonAsync(
-            //            "http://192.168.100.5:1234/v1/chat/completions",
-            //            request);
-
-            //        var wynik = await response.Content.ReadAsByteArrayAsync();
-
-            //        var st = UTF8Encoding.UTF8.GetString(wynik);
-
-            //        TBWyjscie.Text = UTF8Encoding.UTF8.GetString(wynik);
-
-
-            var httpClient = new HttpClient();
-
-
-            ///-------------------
-            //IChatProvider provider = new OpenAiCompatibleChatProvider(
-            //    httpClient,
-            //    endpoint: "http://192.168.100.5:1234/v1",   // LM Studio
-            //    model: "llama-3.3-70b-instruct",
-            //    apiKey: null,
-            //    defaultSystemPrompt: "Jesteś pomocnym asystentem.");
-
-            //var agent = new Agent(provider);
-
-            //var answer = await agent.AskAsync("Napisz krótko czym jest AI.");
-            //Console.WriteLine(answer);
-
-
+            //todo:mam inny model, a to i tak działa - dziwne
             var settings = new ChatProviderSettings
             {
                 //Endpoint = "http://192.168.100.5:1234/v1",
                 Endpoint = "http://127.0.0.1:1234/v1",
                 Model = "llama-3.3-70b-instruct"
             };
-
-            httpClient.Timeout = Timeout.InfiniteTimeSpan;
 
             IChatProvider provider = new OpenAiCompatibleChatProvider(
                 httpClient,
@@ -126,17 +56,7 @@ namespace ForLMStudio
 
             var answer = await agent.AskAsync("Napisz krótko czym jest AI.");
 
-            TBWyjscie.Text = $"{(DateTime.Now - dt):mm\\:ss}s.\r\n{answer}";
-            
-            //Console.WriteLine(answer);
-
-
-            //        IChatProvider provider = new OpenAiCompatibleChatProvider(
-            //new HttpClient(),
-            //endpoint: "https://api.openai.com/v1",
-            //model: "gpt-4o-mini",
-            //apiKey: "sk-...",
-            //defaultSystemPrompt: "Jesteś pomocnym asystentem.");
+            TBWyjscie.Text = $"{(DateTime.Now - dt):mm\\:ss}s.\r\n{answer}";        
         }
     }
 
@@ -261,3 +181,80 @@ public sealed class OpenAiCompatibleChatProvider : IChatProvider
 
 
 }
+
+//        //var message = new List<ChatMessage>
+//        //{
+//        //    new(ChatRole.System, "Jesteś pomocnym asystentem."),
+//        //    new(ChatRole.User, TBWejscie.Text)
+//        //};
+
+//        var httpClient = new HttpClient();
+
+//        //using Microsoft.Extensions.AI;
+//        //using OpenAI;
+
+//        var openAiClient = new OpenAIClient(
+//            new ApiKeyCredential("lm-studio"));
+
+//        var chatClient = openAiClient.AsChatClient(
+//            modelId: "llama-3.3-70b-instruct",
+//            endpoint: new Uri("http://192.168.100.5:1234/v1"));
+
+//        //var request = new
+//        //{
+//        //    //model = "qwen2.5-7b-instruct",
+//        //    model = "llama-3.3-70b-instruct",
+//        //    messages = message   
+//        //};
+
+//        var request = new
+//        {
+//            model = "llama-3.3-70b-instruct",
+//            messages = new[]
+//{
+//    new
+//    {
+//        role = "system",
+//        content = "Jesteś pomocnym asystentem."
+//    },
+//    new
+//    {
+//        role = "user",
+//        content = TBWejscie.Text
+//    }
+//}
+//        };
+
+
+//        var response = await httpClient.PostAsJsonAsync(
+//            "http://192.168.100.5:1234/v1/chat/completions",
+//            request);
+
+//        var wynik = await response.Content.ReadAsByteArrayAsync();
+
+//        var st = UTF8Encoding.UTF8.GetString(wynik);
+
+//        TBWyjscie.Text = UTF8Encoding.UTF8.GetString(wynik);
+
+///-------------------
+//IChatProvider provider = new OpenAiCompatibleChatProvider(
+//    httpClient,
+//    endpoint: "http://192.168.100.5:1234/v1",   // LM Studio
+//    model: "llama-3.3-70b-instruct",
+//    apiKey: null,
+//    defaultSystemPrompt: "Jesteś pomocnym asystentem.");
+
+//var agent = new Agent(provider);
+
+//var answer = await agent.AskAsync("Napisz krótko czym jest AI.");
+//Console.WriteLine(answer);
+
+//Console.WriteLine(answer);
+
+
+//        IChatProvider provider = new OpenAiCompatibleChatProvider(
+//new HttpClient(),
+//endpoint: "https://api.openai.com/v1",
+//model: "gpt-4o-mini",
+//apiKey: "sk-...",
+//defaultSystemPrompt: "Jesteś pomocnym asystentem.");
